@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import { Eye, Edit2, Trash2, Plus } from "lucide-react";
 
@@ -76,7 +77,7 @@ export default function DriverManagementPage() {
     emergencyContact: "",
   });
 
-  // Filter logic: search in all fields if "All" is selected, or in a specific field otherwise
+  // Filter logic
   const filteredDrivers = drivers.filter((driver) => {
     const query = searchQuery.toLowerCase();
     if (filterType === "All") {
@@ -98,15 +99,9 @@ export default function DriverManagementPage() {
     return true;
   });
 
-  const handleSearchChange = (e) => {
-    setSearchQuery(e.target.value);
-  };
+  const handleSearchChange = (e) => setSearchQuery(e.target.value);
+  const handleFilterTypeChange = (e) => setFilterType(e.target.value);
 
-  const handleFilterTypeChange = (e) => {
-    setFilterType(e.target.value);
-  };
-
-  // Notification helper
   const showNotification = (msg) => {
     setNotification(msg);
     setTimeout(() => setNotification(""), 3000);
@@ -191,13 +186,11 @@ export default function DriverManagementPage() {
     setIsModalOpen(false);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
-  };
+  const closeModal = () => setIsModalOpen(false);
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen p-4">
-      {/* Centered Notification Toast */}
+    <div className="bg-gray-900 text-white min-h-screen p-4 transition-all duration-300">
+      {/* Notification Toast */}
       {notification && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="bg-indigo-600 text-white px-6 py-3 rounded-md shadow-lg transition-all duration-300 animate-fadeIn">
@@ -208,12 +201,19 @@ export default function DriverManagementPage() {
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-center justify-between mb-6">
-        <h1 className="text-2xl font-semibold transition-all duration-300 hover:scale-105">
-          Driver Management
-        </h1>
+        <div
+          className="transition-transform duration-700 transform hover:rotateY-180"
+          style={{ perspective: "1000px" }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = "rotateY(180deg)") }
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "rotateY(0deg)") }
+        >
+          <h1 className="text-3xl font-semibold transition-all duration-300 hover:scale-105">
+            Driver Management
+          </h1>
+        </div>
         <button
           onClick={handleAddDriver}
-          className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-md transition-transform duration-300 transform hover:scale-105 hover:shadow-xl mt-4 sm:mt-0"
+          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-md transition-transform duration-300 hover:scale-105 hover:shadow-xl mt-4 sm:mt-0"
         >
           <Plus size={16} />
           Add Driver
@@ -249,7 +249,7 @@ export default function DriverManagementPage() {
       </div>
 
       {/* Drivers Table */}
-      <div className="overflow-x-auto rounded-md bg-gray-800 shadow-lg">
+      <div className="overflow-x-auto rounded-md bg-gray-800 shadow-lg transition-all duration-300 hover:scale-105">
         <table className="min-w-full text-left border-collapse">
           <thead className="bg-gray-700 border-b border-gray-600">
             <tr>
@@ -267,7 +267,7 @@ export default function DriverManagementPage() {
             {filteredDrivers.map((driver) => (
               <tr
                 key={driver.id}
-                className="border-b border-gray-700 hover:bg-gray-700 transition-colors duration-300"
+                className="border-b border-gray-700 transition-colors duration-300 hover:bg-gray-700"
               >
                 <td className="p-3">{driver.name}</td>
                 <td className="p-3">{driver.licenseNo}</td>
@@ -279,19 +279,19 @@ export default function DriverManagementPage() {
                 <td className="p-3">
                   <div className="flex gap-2">
                     <button
-                      className="text-indigo-400 hover:text-indigo-200 transition-all duration-300 hover:scale-105 hover:shadow-md"
+                      className="text-indigo-400 transition-all duration-300 hover:scale-110 hover:shadow-md"
                       onClick={() => handleView(driver)}
                     >
                       <Eye size={16} />
                     </button>
                     <button
-                      className="text-blue-400 hover:text-blue-200 transition-all duration-300 hover:scale-105 hover:shadow-md"
+                      className="text-blue-400 transition-all duration-300 hover:scale-110 hover:shadow-md"
                       onClick={() => handleEdit(driver)}
                     >
                       <Edit2 size={16} />
                     </button>
                     <button
-                      className="text-red-400 hover:text-red-200 transition-all duration-300 hover:scale-105 hover:shadow-md"
+                      className="text-red-400 transition-all duration-300 hover:scale-110 hover:shadow-md"
                       onClick={() => handleDelete(driver)}
                     >
                       <Trash2 size={16} />
@@ -313,8 +313,8 @@ export default function DriverManagementPage() {
 
       {/* Modal for Add/Edit / View */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 animate-fadeIn">
-          <div className="bg-gray-800 text-white rounded-md w-full max-w-4xl p-6 relative shadow-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 transition-all duration-300 animate-fadeIn">
+          <div className="bg-gray-800 text-white rounded-md w-full max-w-4xl p-6 relative shadow-xl transition-all duration-300">
             {/* Modal Header */}
             <div className="p-4 border-b border-gray-700 flex items-center justify-between">
               <h2 className="text-2xl font-semibold">
@@ -325,7 +325,7 @@ export default function DriverManagementPage() {
                   : "View Driver"}
               </h2>
               <button
-                className="text-gray-300 hover:text-white transition-all duration-300"
+                className="text-gray-300 transition-all duration-300 hover:scale-110 hover:shadow-md"
                 onClick={closeModal}
               >
                 &times;
@@ -507,13 +507,13 @@ export default function DriverManagementPage() {
               <div className="p-4 border-t border-gray-700 flex justify-end gap-2">
                 <button
                   onClick={handleFormSubmit}
-                  className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                  className="px-4 py-2 bg-indigo-600 text-white rounded-md transition-transform duration-300 hover:scale-110 hover:shadow-lg"
                 >
                   {formMode === "add" ? "Add" : "Update"}
                 </button>
                 <button
                   onClick={closeModal}
-                  className="px-4 py-2 border border-gray-600 rounded-md hover:bg-gray-700 transition-all duration-300 hover:scale-105 hover:shadow-lg"
+                  className="px-4 py-2 border border-gray-600 rounded-md transition-transform duration-300 hover:scale-110 hover:shadow-lg"
                 >
                   Cancel
                 </button>

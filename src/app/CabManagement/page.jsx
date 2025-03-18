@@ -13,7 +13,6 @@ import {
 } from "lucide-react";
 
 // External UI components from shadcn/ui and others:
-// import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -32,11 +31,8 @@ import {
   TableHeader,
   TableRow
 } from "@/components/ui/table";
-// import { Badge } from "@/components/ui/badge";
 
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
-// import { Pie, PieChart, ResponsiveContainer } from "recharts";
 
 export default function CabManagementDashboard() {
   // Sample data (JSX version, no TS types)
@@ -83,61 +79,80 @@ export default function CabManagementDashboard() {
   const inServiceCabs = 10;
   const needsRepairCabs = 6;
 
-  // Status distribution data for the chart
+  // Status distribution data for the chart with new colors:
   const statusDistribution = [
-    { name: "Active", value: 60, color: "#1E40AF" },
-    { name: "In Service", value: 20, color: "#6B7280" },
-    { name: "Needs Repair", value: 20, color: "#EF4444" },
+    { name: "Active", value: 60, color: "#10B981" },      // Green
+    { name: "In Service", value: 20, color: "#F59E0B" },    // Yellow
+    { name: "Needs Repair", value: 20, color: "#3B82F6" },  // Blue
   ];
 
+  // State to track which pie slice is hovered
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-6 lg:p-8">
+    <div className="min-h-screen bg-gray-900 p-4 md:p-6 lg:p-8 transition-all duration-300">
       <div className="w-full max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-2xl font-bold text-gray-900">Cab Management</h1>
-          <Button className="mt-4 md:mt-0 bg-gray-900 hover:bg-gray-800">
+        {/* Header with 3D flip animation on hover */}
+        <div
+          className="transition-transform duration-500"
+          style={{ perspective: "1000px" }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = "rotateY(180deg)")}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "rotateY(0deg)")}
+        >
+          <h1 className="text-3xl leading-loose font-bold text-white transition-all duration-300">
+            Cab Management
+          </h1>
+        </div>
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 mt-4">
+          <Button className="mt-4 md:mt-0 bg-blue-500 hover:bg-blue-600 hover:scale-105 transition-all duration-300">
             <Plus className="mr-2 h-4 w-4" /> Add New Cab
           </Button>
         </div>
 
         {/* Status Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
+          <Card className="bg-gray-800 p-4 hover:shadow-xl hover:scale-105 transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between pb-1">
+              <CardTitle className="text-md font-medium text-white transition-all duration-300">
                 Total Cabs
               </CardTitle>
-              <Car className="h-4 w-4 text-gray-500" />
+              <Car className="h-4 w-4 text-gray-500 transition-all duration-300" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalCabs}</div>
+              <div className="text-xl font-bold text-white transition-all duration-300">
+                {totalCabs}
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
+          <Card className="bg-gray-800 p-4 hover:shadow-xl hover:scale-105 transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between pb-1">
+              <CardTitle className="text-md font-medium text-white transition-all duration-300">
                 Active
               </CardTitle>
-              <Check className="h-4 w-4 text-green-500" />
+              <Check className="h-4 w-4 text-green-500 transition-all duration-300" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{activeCabs}</div>
+              <div className="text-xl font-bold text-white transition-all duration-300">
+                {activeCabs}
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
+          <Card className="bg-gray-800 p-4 hover:shadow-xl hover:scale-105 transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between pb-1">
+              <CardTitle className="text-sm font-medium text-white transition-all duration-300">
                 In Service
               </CardTitle>
-              <Wrench className="h-4 w-4 text-gray-500" />
+              <Wrench className="h-4 w-4 text-gray-500 transition-all duration-300" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{inServiceCabs}</div>
+              <div className="text-xl font-bold text-white transition-all duration-300">
+                {inServiceCabs}
+              </div>
             </CardContent>
           </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-gray-500">
+          <Card className="bg-gray-800 p-4 hover:shadow-xl hover:scale-105 transition-all duration-300">
+            <CardHeader className="flex flex-row items-center justify-between pb-1">
+              <CardTitle className="text-sm font-medium text-white transition-all duration-300">
                 Needs Repair
               </CardTitle>
               <svg
@@ -148,7 +163,7 @@ export default function CabManagementDashboard() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="h-4 w-4 text-red-500"
+                className="h-4 w-4 text-red-500 transition-all duration-300"
               >
                 <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
                 <path d="M12 9v4" />
@@ -156,7 +171,9 @@ export default function CabManagementDashboard() {
               </svg>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{needsRepairCabs}</div>
+              <div className="text-xl font-bold text-white transition-all duration-300">
+                {needsRepairCabs}
+              </div>
             </CardContent>
           </Card>
         </div>
@@ -165,90 +182,89 @@ export default function CabManagementDashboard() {
           <div className="lg:col-span-2">
             {/* Search and Filter */}
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="relative flex-grow">
+              <div className="relative flex-grow hover:scale-105 transition-all duration-300">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                <Input placeholder="Search cabs..." className="pl-10" />
+                <Input
+                  placeholder="Search cabs..."
+                  className="pl-10 bg-gray-800 text-white transition-all duration-300"
+                />
               </div>
-              <Select>
-                <SelectTrigger className="w-full sm:w-[180px]">
+              <Select className="transition-all duration-300">
+                <SelectTrigger className="w-full sm:w-[180px] bg-gray-800 text-white transition-all duration-300">
                   <SelectValue placeholder="Filter by Status" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="in-service">In Service</SelectItem>
-                  <SelectItem value="needs-repair">Needs Repair</SelectItem>
+                <SelectContent className="bg-gray-800 text-white">
+                  <SelectItem value="all" className="transition-all duration-300">
+                    All Statuses
+                  </SelectItem>
+                  <SelectItem value="active" className="transition-all duration-300">
+                    Active
+                  </SelectItem>
+                  <SelectItem value="in-service" className="transition-all duration-300">
+                    In Service
+                  </SelectItem>
+                  <SelectItem value="needs-repair" className="transition-all duration-300">
+                    Needs Repair
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
 
             {/* Cabs Table */}
-            <div className="border rounded-lg overflow-hidden">
+            <div className="border border-gray-700 rounded-lg overflow-hidden bg-gray-800 hover:shadow-xl hover:scale-105 transition-all duration-300">
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead className="w-[100px]">CAB NO.</TableHead>
-                      <TableHead>CAB MODEL</TableHead>
-                      <TableHead>ASSIGNED DRIVER</TableHead>
-                      <TableHead>LAST SERVICE</TableHead>
-                      <TableHead>NEXT SERVICE</TableHead>
-                      <TableHead>ODOMETER</TableHead>
-                      <TableHead>STATUS</TableHead>
-                      <TableHead className="text-right">ACTIONS</TableHead>
+                      <TableHead className="w-[100px] text-white">CAB NO.</TableHead>
+                      <TableHead className="text-white">CAB MODEL</TableHead>
+                      <TableHead className="text-white">ASSIGNED DRIVER</TableHead>
+                      <TableHead className="text-white">LAST SERVICE</TableHead>
+                      <TableHead className="text-white">NEXT SERVICE</TableHead>
+                      <TableHead className="text-white">ODOMETER</TableHead>
+                      <TableHead className="text-white">STATUS</TableHead>
+                      <TableHead className="text-right text-white">ACTIONS</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {cabs.map((cab) => (
                       <TableRow key={cab.id}>
-                        <TableCell className="font-medium">{cab.id}</TableCell>
-                        <TableCell>{cab.model}</TableCell>
+                        <TableCell className="font-medium text-white hover:bg-white hover:text-gray-900">{cab.id}</TableCell>
+                        <TableCell className="text-white hover:bg-white hover:text-gray-900">{cab.model}</TableCell>
                         <TableCell>
-                          <div className="flex items-center gap-2">
-                            <Avatar className="h-8 w-8 border">
-                              <AvatarImage
-                                src={cab.driver.avatar}
-                                alt={cab.driver.name}
-                              />
-                              <AvatarFallback>
-                                {cab.driver.name
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")}
-                              </AvatarFallback>
-                            </Avatar>
-                            <span>{cab.driver.name}</span>
-                          </div>
+                          <span className="text-white hover:bg-white hover:text-gray-900">
+                            {cab.driver.name}
+                          </span>
                         </TableCell>
-                        <TableCell>{cab.lastService}</TableCell>
-                        <TableCell>{cab.nextService}</TableCell>
-                        <TableCell>{cab.odometer}</TableCell>
+                        <TableCell className="text-white hover:bg-white hover:text-gray-900">{cab.lastService}</TableCell>
+                        <TableCell className="text-white hover:bg-white hover:text-gray-900">{cab.nextService}</TableCell>
+                        <TableCell className="text-white hover:bg-white hover:text-gray-900">{cab.odometer}</TableCell>
                         <TableCell>
                           <Badge
                             variant="outline"
-                            className={`${
+                            className={` hover:bg-white hover:text-gray-900${
                               cab.status === "Active"
-                                ? "border-blue-500 text-blue-500 bg-blue-50"
+                                ? "border-green-500 text-green-500 bg-green-50"
                                 : ""
                             } ${
                               cab.status === "In Service"
-                                ? "border-gray-500 text-gray-500 bg-gray-50"
+                                ? "border-yellow-500 text-yellow-500 bg-yellow-50"
                                 : ""
                             } ${
                               cab.status === "Needs Repair"
                                 ? "border-red-500 text-red-500 bg-red-50"
                                 : ""
-                            }`}
+                            } transition-all duration-300`}
                           >
                             {cab.status}
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-2">
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className="hover:bg-white hover:text-gray-900 transition-all duration-300">
                               <Edit className="h-4 w-4" />
                             </Button>
-                            <Button variant="ghost" size="icon">
+                            <Button variant="ghost" size="icon" className="hover:bg-white hover:text-gray-900 transition-all duration-300">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
@@ -262,10 +278,12 @@ export default function CabManagementDashboard() {
           </div>
 
           {/* Status Distribution Chart */}
-          <div>
-            <Card>
+          <div className="transition-all duration-300 hover:scale-105">
+            <Card className="bg-gray-800 hover:shadow-xl transition-all duration-300">
               <CardHeader>
-                <CardTitle className="text-lg">Status Distribution</CardTitle>
+                <CardTitle className="text-lg text-white transition-all duration-300">
+                  Status Distribution
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-[250px] w-full">
@@ -279,19 +297,27 @@ export default function CabManagementDashboard() {
                         outerRadius={80}
                         fill="#8884d8"
                         dataKey="value"
+                        onMouseLeave={() => setHoveredIndex(null)}
                       >
                         {statusDistribution.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} />
+                          <Cell
+                            key={`cell-${index}`}
+                            fill={entry.color}
+                            stroke={hoveredIndex === index ? "#ffffff" : "none"}
+                            strokeWidth={hoveredIndex === index ? 2 : 0}
+                            onMouseEnter={() => setHoveredIndex(index)}
+                            onMouseLeave={() => setHoveredIndex(null)}
+                          />
                         ))}
                       </Pie>
                     </PieChart>
                   </ResponsiveContainer>
                 </div>
                 <div className="mt-6 space-y-2">
-                  {statusDistribution.map((status) => (
+                  {statusDistribution.map((status, index) => (
                     <div
                       key={status.name}
-                      className="flex items-center justify-between"
+                      className="flex items-center justify-between text-white transition-all duration-300"
                     >
                       <div className="flex items-center">
                         <div

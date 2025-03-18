@@ -1,6 +1,16 @@
 "use client";
 import React, { useState } from "react";
-import { Eye, Edit2, Trash2, Mail, Search, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Eye,
+  Edit2,
+  Trash2,
+  Mail,
+  Search,
+  Download,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 // Sample data
 const initialSubAdmins = [
@@ -52,8 +62,15 @@ const initialSubAdmins = [
 ];
 
 export default function SubAdminManagementPage() {
-  // Main state
-  const [subAdmins, setSubAdmins] = useState(initialSubAdmins);
+  // One sub-admin starts with "Success"; others "Pending"
+  const [subAdmins, setSubAdmins] = useState(
+    initialSubAdmins.map((sa) =>
+      sa.id === 1
+        ? { ...sa, emailStatus: "Success" }
+        : { ...sa, emailStatus: "Pending" }
+    )
+  );
+
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("All");
 
@@ -79,7 +96,7 @@ export default function SubAdminManagementPage() {
   const endIndex = startIndex + itemsPerPage;
   const currentSubAdmins = filteredSubAdmins.slice(startIndex, endIndex);
 
-  // Handlers for search, filter, export
+  // Handlers
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
     setCurrentPage(1);
@@ -90,7 +107,7 @@ export default function SubAdminManagementPage() {
   };
   const handleExport = () => alert("Export functionality not implemented yet!");
 
-  // ---------------- VIEW MODAL ----------------
+  // View Modal
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [viewSubAdmin, setViewSubAdmin] = useState(null);
 
@@ -103,7 +120,7 @@ export default function SubAdminManagementPage() {
     setViewSubAdmin(null);
   };
 
-  // ---------------- ADD/EDIT MODAL ----------------
+  // Add/Edit Modal
   const [isAddEditModalOpen, setIsAddEditModalOpen] = useState(false);
   const [formMode, setFormMode] = useState("add"); // "add" or "edit"
   const [formData, setFormData] = useState({
@@ -116,7 +133,6 @@ export default function SubAdminManagementPage() {
     avatar: "",
   });
 
-  // "Add New Sub Admin" button
   const handleAddNewSubAdmin = () => {
     setFormMode("add");
     setFormData({
@@ -131,14 +147,13 @@ export default function SubAdminManagementPage() {
     setIsAddEditModalOpen(true);
   };
 
-  // "Edit" button
   const handleEdit = (subAdmin) => {
     setFormMode("edit");
     setFormData({ ...subAdmin });
     setIsAddEditModalOpen(true);
   };
 
-  // Handle avatar
+  // Avatar
   const handleAvatarChange = (e) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -169,7 +184,10 @@ export default function SubAdminManagementPage() {
       return;
     }
     if (formMode === "add") {
-      setSubAdmins((prev) => [...prev, formData]);
+      setSubAdmins((prev) => [
+        ...prev,
+        { ...formData, emailStatus: "Pending" },
+      ]);
     } else {
       const confirmUpdate = confirm("Do you want to update this sub admin?");
       if (!confirmUpdate) return;
@@ -180,7 +198,7 @@ export default function SubAdminManagementPage() {
     setIsAddEditModalOpen(false);
   };
 
-  // Reset form
+  // Reset
   const handleFormReset = () => {
     if (formMode === "add") {
       setFormData({
@@ -198,12 +216,7 @@ export default function SubAdminManagementPage() {
     }
   };
 
-  // Cancel form
-  const handleCloseAddEditModal = () => {
-    setIsAddEditModalOpen(false);
-  };
-
-  // Delete sub admin
+  // Delete
   const handleDelete = (subAdmin) => {
     const confirmDelete = confirm(
       `Are you sure you want to delete ${subAdmin.name}?`
@@ -221,25 +234,48 @@ export default function SubAdminManagementPage() {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
+  // Email sending
+  const handleSendEmail = (subAdminId) => {
+    setSubAdmins((prev) =>
+      prev.map((sa) => {
+        if (sa.id === subAdminId && sa.emailStatus === "Pending") {
+          return { ...sa, emailStatus: "Success" };
+        }
+        return sa;
+      })
+    );
+  };
+
+  // Count how many are pending
+  const pendingEmailCount = subAdmins.filter(
+    (sa) => sa.emailStatus === "Pending"
+  ).length;
+
   return (
     <div className="bg-gray-900 text-white min-h-screen p-4 h-[102%]">
       {/* Title & Add Button */}
-      <div className="flex flex-wrap items-center justify-between mb-6 mt-10">
+      <motion.div
+        className="flex flex-wrap items-center justify-between mb-6 mt-10"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
         <h1 className="text-2xl font-semibold">Sub Admin Management</h1>
-        <button
+        <motion.button
           onClick={handleAddNewSubAdmin}
+          whileHover={{ scale: 1.05, rotate: 2 }}
           className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-all duration-300"
         >
           + Add New Sub Admin
-        </button>
-      </div>
+        </motion.button>
+      </motion.div>
 
       {/* Search, Filter & Export */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <select
           value={filterStatus}
           onChange={handleFilterChange}
-          className="border border-gray-700 rounded-md px-4 py-2 bg-gray-800 text-white transition-all duration-300"
+          className="border border-gray-700 rounded-md px-4 py-2 bg-gray-800 text-white transition-all duration-300 hover:scale-105"
         >
           <option value="All">All Status</option>
           <option value="Active">Active</option>
@@ -247,7 +283,7 @@ export default function SubAdminManagementPage() {
         </select>
         <button
           onClick={handleExport}
-          className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600 flex items-center gap-2 transition-all duration-300"
+          className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600 flex items-center gap-2 transition-all duration-300 hover:scale-105"
         >
           <Download className="text-white" size={18} />
           Export
@@ -261,14 +297,14 @@ export default function SubAdminManagementPage() {
           />
           <input
             type="text"
-            className="w-full pl-8 border border-gray-300 rounded-md px-3 py-2 bg-black-300 text-white placeholder-gray-400 transition-all duration-300 ease-in-out hover:scale-105"
+            className="w-full pl-8 border border-gray-300 rounded-md px-3 py-2 bg-gray-800 text-white placeholder-gray-400 transition-all duration-300 ease-in-out hover:scale-105"
             value={searchQuery}
             onChange={handleSearchChange}
           />
         </div>
       </div>
 
-      {/* Table */}
+      {/* Table Container (with shadow) */}
       <div className="overflow-x-auto rounded-md shadow-sm">
         <table className="w-full text-left border-collapse bg-gray-800">
           <thead className="bg-gray-700 border-b border-gray-600">
@@ -278,36 +314,42 @@ export default function SubAdminManagementPage() {
               <th className="p-3 whitespace-nowrap text-gray-200">Role</th>
               <th className="p-3 whitespace-nowrap text-gray-200">Status</th>
               <th className="p-3 whitespace-nowrap text-gray-200">Actions</th>
+              {/* Mail icon with top badge */}
               <th className="p-3 whitespace-nowrap text-gray-200">
-                <Mail className="inline-block mr-2" size={16} />
-                Send Email
+                <div className="relative inline-block">
+                  <Mail size={20} />
+                  {pendingEmailCount > 0 && (
+                    <span className="absolute -top-3 left-1/2 transform -translate-x-1/2 text-xs bg-red-500 text-white rounded-full px-1 font-bold">
+                      {pendingEmailCount}
+                    </span>
+                  )}
+                </div>
               </th>
             </tr>
           </thead>
           <tbody>
             {currentSubAdmins.map((subAdmin) => (
-              <tr
+              <motion.tr
                 key={subAdmin.id}
-                className="border-b border-gray-700 hover:bg-gray-700 transition-colors duration-300"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.3 }}
+                className="border-b border-gray-700 transition-all"
               >
                 <td className="p-3">{subAdmin.name}</td>
                 <td className="p-3">{subAdmin.email}</td>
                 <td className="p-3">{subAdmin.role}</td>
                 <td className="p-3">
-                  <div className="relative group inline-block">
-                    {subAdmin.status === "Active" ? (
-                      <span className="inline-block px-2 py-1 text-xs font-medium text-white-300 bg-green-700 rounded-full transition-all duration-300 ease-in-out hover:scale-105">
-                        Active
-                      </span>
-                    ) : (
-                      <span className="inline-block px-2 py-1 text-xs font-medium text-white-300 bg-red-700 rounded-full transition-all duration-300 ease-in-out hover:scale-105">
-                        {subAdmin.status}
-                      </span>
-                    )}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      {/* Tooltip content (if needed) */}
-                    </div>
-                  </div>
+                  {subAdmin.status === "Active" ? (
+                    <span className="inline-block px-2 py-1 text-xs font-medium bg-green-700 rounded-full transition-all duration-300 ease-in-out hover:scale-105">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="inline-block px-2 py-1 text-xs font-medium bg-red-700 rounded-full transition-all duration-300 ease-in-out hover:scale-105">
+                      {subAdmin.status}
+                    </span>
+                  )}
                 </td>
                 <td className="p-3">
                   <div className="flex items-center gap-3">
@@ -332,23 +374,24 @@ export default function SubAdminManagementPage() {
                   </div>
                 </td>
                 <td className="p-3">
-                  <button
-                    onClick={() => {
-                      const confirmEmail = confirm(
-                        `Do you want to send an email to ${subAdmin.email}?`
-                      );
-                      if (confirmEmail) {
-                        alert(`Starting email process for ${subAdmin.email}...`);
-                      }
-                    }}
+                  <motion.button
+                    onClick={() => handleSendEmail(subAdmin.id)}
+                    whileHover={{ scale: 1.1, rotate: 3 }}
+                    transition={{ duration: 0.3 }}
+                    className="flex items-center gap-1"
                   >
                     <Mail
-                      className="text-gray-300 hover:text-gray-100 hover:scale-110 transition-transform duration-300"
+                      className="text-gray-300 hover:text-gray-100 transition-transform duration-300"
                       size={18}
                     />
-                  </button>
+                    {subAdmin.emailStatus === "Pending" ? (
+                      <span className="w-3 h-3 bg-red-500 rounded-full animate-pulse"></span>
+                    ) : (
+                      <span className="w-3 h-3 bg-green-500 rounded-full"></span>
+                    )}
+                  </motion.button>
                 </td>
-              </tr>
+              </motion.tr>
             ))}
             {currentSubAdmins.length === 0 && (
               <tr>
@@ -372,7 +415,8 @@ export default function SubAdminManagementPage() {
           <span className="font-medium">
             {Math.min(endIndex, filteredSubAdmins.length)}
           </span>{" "}
-          of <span className="font-medium">{filteredSubAdmins.length}</span> entries
+          of <span className="font-medium">{filteredSubAdmins.length}</span>{" "}
+          entries
         </p>
         <div className="flex gap-2">
           <button
@@ -414,24 +458,32 @@ export default function SubAdminManagementPage() {
                 className="rounded-full w-20 h-20 object-cover transition-all duration-300 hover:scale-105"
               />
               <div>
-                <p className="text-sm text-gray-400">Role: {viewSubAdmin.role}</p>
-                <p className="text-sm text-gray-400">Status: {viewSubAdmin.status}</p>
+                <p className="text-sm text-gray-400">
+                  Role: {viewSubAdmin.role}
+                </p>
+                <p className="text-sm text-gray-400">
+                  Status: {viewSubAdmin.status}
+                </p>
               </div>
             </div>
             <div className="bg-gray-700 rounded-md p-4 transition-all duration-300 hover:scale-105">
               <h3 className="text-lg font-semibold mb-3">Details</h3>
               <ul className="text-sm space-y-1">
                 <li>
-                  <span className="text-gray-400">Full Name:</span> {viewSubAdmin.name}
+                  <span className="text-gray-400">Full Name:</span>{" "}
+                  {viewSubAdmin.name}
                 </li>
                 <li>
-                  <span className="text-gray-400">Email:</span> {viewSubAdmin.email}
+                  <span className="text-gray-400">Email:</span>{" "}
+                  {viewSubAdmin.email}
                 </li>
                 <li>
-                  <span className="text-gray-400">Phone:</span> {viewSubAdmin.phone}
+                  <span className="text-gray-400">Phone:</span>{" "}
+                  {viewSubAdmin.phone}
                 </li>
                 <li>
-                  <span className="text-gray-400">Status:</span> {viewSubAdmin.status}
+                  <span className="text-gray-400">Status:</span>{" "}
+                  {viewSubAdmin.status}
                 </li>
               </ul>
             </div>
@@ -467,7 +519,9 @@ export default function SubAdminManagementPage() {
               </div>
               {/* Name */}
               <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
+                <label className="block text-sm font-medium mb-1">
+                  Name
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -479,7 +533,9 @@ export default function SubAdminManagementPage() {
               </div>
               {/* Email */}
               <div>
-                <label className="block text-sm font-medium mb-1">Email</label>
+                <label className="block text-sm font-medium mb-1">
+                  Email
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -491,7 +547,9 @@ export default function SubAdminManagementPage() {
               </div>
               {/* Phone */}
               <div>
-                <label className="block text-sm font-medium mb-1">Phone</label>
+                <label className="block text-sm font-medium mb-1">
+                  Phone
+                </label>
                 <input
                   type="text"
                   name="phone"
@@ -503,7 +561,9 @@ export default function SubAdminManagementPage() {
               </div>
               {/* Role */}
               <div>
-                <label className="block text-sm font-medium mb-1">Role</label>
+                <label className="block text-sm font-medium mb-1">
+                  Role
+                </label>
                 <input
                   type="text"
                   name="role"
@@ -515,7 +575,9 @@ export default function SubAdminManagementPage() {
               </div>
               {/* Status */}
               <div>
-                <label className="block text-sm font-medium mb-1">Status</label>
+                <label className="block text-sm font-medium mb-1">
+                  Status
+                </label>
                 <select
                   name="status"
                   className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 ease-in-out hover:scale-105"

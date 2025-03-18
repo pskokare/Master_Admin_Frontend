@@ -30,18 +30,18 @@ export default function SystemSettingsPage() {
 
   return (
     /** 
-     * 1) Add margin-left (md:ml-64) to avoid overlap with sidebar on desktop
-     * 2) p-4 for spacing, bg-gray-50 for background
+     * 1) Added margin-left (md:ml-64) to avoid overlap with sidebar on desktop if needed
+     * 2) p-14 for spacing and bg-gray-900 for a consistent dark background
      * 3) min-h-screen to fill vertical space
      */
-    <div className=" p-14 bg-gray-50 min-h-screen">
+    <div className="p-14 bg-gray-900 min-h-screen text-white">
       <h1 className="text-2xl font-bold mb-6 border-b pb-4">System Settings</h1>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Section (2 columns on large screens) */}
         <div className="lg:col-span-2 space-y-6">
           {/* Roles & Permissions */}
-          <div className="bg-white rounded-md shadow-sm p-6">
+          <div className="bg-gray-800 rounded-md shadow-sm p-6">
             <h2 className="text-lg font-semibold mb-4">Roles & Permissions</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between py-2">
@@ -84,13 +84,13 @@ export default function SystemSettingsPage() {
           </div>
 
           {/* Security Settings */}
-          <div className="bg-white rounded-md shadow-sm p-6">
+          <div className="bg-gray-800 rounded-md shadow-sm p-6">
             <h2 className="text-lg font-semibold mb-4">Security Settings</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between py-2">
                 <div>
                   <div className="font-medium">Two-Factor Authentication (2FA)</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-400">
                     Require 2FA for all admin users
                   </div>
                 </div>
@@ -107,7 +107,7 @@ export default function SystemSettingsPage() {
               <div className="flex items-center justify-between py-2">
                 <div>
                   <div className="font-medium">Password Policies</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-400">
                     Enforce strong password requirements
                   </div>
                 </div>
@@ -125,17 +125,17 @@ export default function SystemSettingsPage() {
           </div>
 
           {/* Integrations */}
-          <div className="bg-white rounded-md shadow-sm p-6">
+          <div className="bg-gray-800 rounded-md shadow-sm p-6">
             <h2 className="text-lg font-semibold mb-4">Integrations</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center">
-                  <div className="bg-white p-2 mr-3">
-                    <MapPin className="h-5 w-5 text-gray-700" />
+                  <div className="bg-gray-900 p-2 mr-3">
+                    <MapPin className="h-5 w-5 text-gray-200" />
                   </div>
                   <div>
                     <div className="font-medium">Google Maps</div>
-                    <div className="text-sm text-gray-500">API Status: Active</div>
+                    <div className="text-sm text-gray-400">API Status: Active</div>
                   </div>
                 </div>
                 <Switch.Root
@@ -150,12 +150,12 @@ export default function SystemSettingsPage() {
               </div>
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center">
-                  <div className="bg-white p-2 mr-3">
-                    <CreditCard className="h-5 w-5 text-gray-700" />
+                  <div className="bg-gray-900 p-2 mr-3">
+                    <CreditCard className="h-5 w-5 text-gray-200" />
                   </div>
                   <div>
                     <div className="font-medium">Payment Gateway</div>
-                    <div className="text-sm text-gray-500">API Status: Inactive</div>
+                    <div className="text-sm text-gray-400">API Status: Inactive</div>
                   </div>
                 </div>
                 <Switch.Root
@@ -175,26 +175,26 @@ export default function SystemSettingsPage() {
         {/* Right Section (1 column on large screens) */}
         <div className="space-y-6">
           {/* System Stats */}
-          <div className="bg-white rounded-md shadow-sm p-6">
+          <div className="bg-gray-800 rounded-md shadow-sm p-6">
             <h2 className="text-lg font-semibold mb-4">System Stats</h2>
             <div className="space-y-6">
               <div>
-                <div className="text-sm text-gray-500">Current Users</div>
+                <div className="text-sm text-gray-400">Current Users</div>
                 <div className="text-2xl font-bold">150</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">Active Alerts</div>
+                <div className="text-sm text-gray-400">Active Alerts</div>
                 <div className="text-2xl font-bold">3</div>
               </div>
               <div>
-                <div className="text-sm text-gray-500">System Load</div>
+                <div className="text-sm text-gray-400">System Load</div>
                 <div className="text-2xl font-bold">45%</div>
               </div>
             </div>
           </div>
 
           {/* Extra Features */}
-          <div className="bg-white rounded-md shadow-sm p-6">
+          <div className="bg-gray-800 rounded-md shadow-sm p-6">
             <h2 className="text-lg font-semibold mb-4">Extra Features</h2>
             <div className="space-y-4">
               <div className="flex items-center justify-between py-2">
