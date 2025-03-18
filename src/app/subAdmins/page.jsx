@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { Eye, Edit2, Trash2, Mail } from "lucide-react";
+import { Eye, Edit2, Trash2, Mail, Search, Download, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Sample data
 const initialSubAdmins = [
@@ -222,13 +222,13 @@ export default function SubAdminManagementPage() {
   };
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen p-4">
+    <div className="bg-gray-900 text-white min-h-screen p-4 h-[102%]">
       {/* Title & Add Button */}
-      <div className="flex flex-wrap items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between mb-6 mt-10">
         <h1 className="text-2xl font-semibold">Sub Admin Management</h1>
         <button
           onClick={handleAddNewSubAdmin}
-          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
+          className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition-all duration-300"
         >
           + Add New Sub Admin
         </button>
@@ -236,17 +236,10 @@ export default function SubAdminManagementPage() {
 
       {/* Search, Filter & Export */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Search sub-admins..."
-          className="flex-grow border border-gray-700 rounded-md px-4 py-2 min-w-[200px] bg-gray-800 text-white placeholder-gray-400"
-          value={searchQuery}
-          onChange={handleSearchChange}
-        />
         <select
           value={filterStatus}
           onChange={handleFilterChange}
-          className="border border-gray-700 rounded-md px-4 py-2 bg-gray-800 text-white"
+          className="border border-gray-700 rounded-md px-4 py-2 bg-gray-800 text-white transition-all duration-300"
         >
           <option value="All">All Status</option>
           <option value="Active">Active</option>
@@ -254,11 +247,25 @@ export default function SubAdminManagementPage() {
         </select>
         <button
           onClick={handleExport}
-          className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600 flex items-center gap-2"
+          className="px-4 py-2 bg-gray-700 border border-gray-600 rounded-md hover:bg-gray-600 flex items-center gap-2 transition-all duration-300"
         >
-          <img src="/logo.png" alt="Export Logo" className="w-4 h-4" />
+          <Download className="text-white" size={18} />
           Export
         </button>
+
+        {/* Search input with icon */}
+        <div className="relative w-40">
+          <Search
+            className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400"
+            size={16}
+          />
+          <input
+            type="text"
+            className="w-full pl-8 border border-gray-300 rounded-md px-3 py-2 bg-black-300 text-white placeholder-gray-400 transition-all duration-300 ease-in-out hover:scale-105"
+            value={searchQuery}
+            onChange={handleSearchChange}
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -281,40 +288,44 @@ export default function SubAdminManagementPage() {
             {currentSubAdmins.map((subAdmin) => (
               <tr
                 key={subAdmin.id}
-                className="border-b border-gray-700 hover:bg-gray-700"
+                className="border-b border-gray-700 hover:bg-gray-700 transition-colors duration-300"
               >
                 <td className="p-3">{subAdmin.name}</td>
                 <td className="p-3">{subAdmin.email}</td>
                 <td className="p-3">{subAdmin.role}</td>
                 <td className="p-3">
-                  {subAdmin.status === "Active" ? (
-                    <span className="inline-block px-2 py-1 text-xs font-medium text-green-300 bg-green-900 rounded-full">
-                      Active
-                    </span>
-                  ) : (
-                    <span className="inline-block px-2 py-1 text-xs font-medium text-gray-300 bg-gray-700 rounded-full">
-                      {subAdmin.status}
-                    </span>
-                  )}
+                  <div className="relative group inline-block">
+                    {subAdmin.status === "Active" ? (
+                      <span className="inline-block px-2 py-1 text-xs font-medium text-white-300 bg-green-700 rounded-full transition-all duration-300 ease-in-out hover:scale-105">
+                        Active
+                      </span>
+                    ) : (
+                      <span className="inline-block px-2 py-1 text-xs font-medium text-white-300 bg-red-700 rounded-full transition-all duration-300 ease-in-out hover:scale-105">
+                        {subAdmin.status}
+                      </span>
+                    )}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block text-xs rounded py-1 px-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      {/* Tooltip content (if needed) */}
+                    </div>
+                  </div>
                 </td>
                 <td className="p-3">
                   <div className="flex items-center gap-3">
-                    {/* Single Eye Icon => View Modal */}
                     <button onClick={() => handleView(subAdmin)}>
                       <Eye
-                        className="text-indigo-400 hover:text-indigo-200"
+                        className="text-indigo-400 hover:text-indigo-200 hover:scale-110 transition-transform duration-300"
                         size={18}
                       />
                     </button>
                     <button onClick={() => handleEdit(subAdmin)}>
                       <Edit2
-                        className="text-blue-400 hover:text-blue-200"
+                        className="text-blue-400 hover:text-blue-200 hover:scale-110 transition-transform duration-300"
                         size={18}
                       />
                     </button>
                     <button onClick={() => handleDelete(subAdmin)}>
                       <Trash2
-                        className="text-red-400 hover:text-red-200"
+                        className="text-red-400 hover:text-red-200 hover:scale-110 transition-transform duration-300"
                         size={18}
                       />
                     </button>
@@ -331,7 +342,10 @@ export default function SubAdminManagementPage() {
                       }
                     }}
                   >
-                    <Mail className="text-gray-300 hover:text-gray-100" size={18} />
+                    <Mail
+                      className="text-gray-300 hover:text-gray-100 hover:scale-110 transition-transform duration-300"
+                      size={18}
+                    />
                   </button>
                 </td>
               </tr>
@@ -364,18 +378,18 @@ export default function SubAdminManagementPage() {
           <button
             onClick={handlePrevPage}
             disabled={currentPage === 1}
-            className="px-3 py-1 border border-gray-600 rounded-md text-sm text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
+            className="px-3 py-1 border border-gray-600 rounded-md text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors duration-300"
           >
-            Previous
+            <ChevronLeft size={18} />
           </button>
           <button
             onClick={handleNextPage}
             disabled={
               currentPage === totalPages || filteredSubAdmins.length === 0
             }
-            className="px-3 py-1 border border-gray-600 rounded-md text-sm text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700"
+            className="px-3 py-1 border border-gray-600 rounded-md text-gray-200 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-700 transition-colors duration-300"
           >
-            Next
+            <ChevronRight size={18} />
           </button>
         </div>
       </div>
@@ -383,9 +397,9 @@ export default function SubAdminManagementPage() {
       {/* ------------------ VIEW MODAL ------------------ */}
       {isViewModalOpen && viewSubAdmin && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-gray-800 text-white rounded-md w-full max-w-md p-6 relative">
+          <div className="bg-gray-800 text-white rounded-md w-full max-w-md p-6 relative transition-all duration-300 ease-in-out hover:scale-105">
             <button
-              className="absolute top-3 right-3 text-gray-300 hover:text-white"
+              className="absolute top-3 right-3 text-gray-300 hover:text-white transition-all duration-300"
               onClick={closeViewModal}
             >
               &times;
@@ -397,14 +411,14 @@ export default function SubAdminManagementPage() {
               <img
                 src={viewSubAdmin.avatar || "https://via.placeholder.com/80"}
                 alt="Avatar"
-                className="rounded-full w-20 h-20 object-cover"
+                className="rounded-full w-20 h-20 object-cover transition-all duration-300 hover:scale-105"
               />
               <div>
                 <p className="text-sm text-gray-400">Role: {viewSubAdmin.role}</p>
                 <p className="text-sm text-gray-400">Status: {viewSubAdmin.status}</p>
               </div>
             </div>
-            <div className="bg-gray-700 rounded-md p-4">
+            <div className="bg-gray-700 rounded-md p-4 transition-all duration-300 hover:scale-105">
               <h3 className="text-lg font-semibold mb-3">Details</h3>
               <ul className="text-sm space-y-1">
                 <li>
@@ -428,9 +442,9 @@ export default function SubAdminManagementPage() {
       {/* ------------------ ADD/EDIT MODAL ------------------ */}
       {isAddEditModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-gray-800 text-white rounded-md w-full max-w-md p-6 relative">
+          <div className="bg-gray-800 text-white rounded-md w-full max-w-md p-6 relative transition-all duration-300 ease-in-out hover:scale-105">
             <button
-              className="absolute top-3 right-3 text-gray-300 hover:text-white"
+              className="absolute top-3 right-3 text-gray-300 hover:text-white transition-all duration-300"
               onClick={() => setIsAddEditModalOpen(false)}
             >
               &times;
@@ -448,7 +462,7 @@ export default function SubAdminManagementPage() {
                   type="file"
                   accept="image/*"
                   onChange={handleAvatarChange}
-                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white"
+                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 ease-in-out hover:scale-105"
                 />
               </div>
               {/* Name */}
@@ -457,7 +471,7 @@ export default function SubAdminManagementPage() {
                 <input
                   type="text"
                   name="name"
-                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white"
+                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 ease-in-out hover:scale-105"
                   value={formData.name}
                   onChange={handleFormChange}
                   placeholder="Enter name"
@@ -469,7 +483,7 @@ export default function SubAdminManagementPage() {
                 <input
                   type="email"
                   name="email"
-                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white"
+                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 ease-in-out hover:scale-105"
                   value={formData.email}
                   onChange={handleFormChange}
                   placeholder="Enter email"
@@ -481,7 +495,7 @@ export default function SubAdminManagementPage() {
                 <input
                   type="text"
                   name="phone"
-                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white"
+                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 ease-in-out hover:scale-105"
                   value={formData.phone}
                   onChange={handleFormChange}
                   placeholder="+91 98765 43210"
@@ -493,7 +507,7 @@ export default function SubAdminManagementPage() {
                 <input
                   type="text"
                   name="role"
-                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white"
+                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 ease-in-out hover:scale-105"
                   value={formData.role}
                   onChange={handleFormChange}
                   placeholder="e.g. Admin, Editor"
@@ -504,7 +518,7 @@ export default function SubAdminManagementPage() {
                 <label className="block text-sm font-medium mb-1">Status</label>
                 <select
                   name="status"
-                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white"
+                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 ease-in-out hover:scale-105"
                   value={formData.status}
                   onChange={handleFormChange}
                 >
@@ -516,19 +530,19 @@ export default function SubAdminManagementPage() {
             <div className="mt-6 flex justify-end gap-2">
               <button
                 onClick={handleFormReset}
-                className="px-4 py-2 border border-gray-600 rounded-md hover:bg-gray-700"
+                className="px-4 py-2 border border-gray-600 rounded-md hover:bg-gray-700 transition-all duration-300"
               >
                 Reset
               </button>
               <button
                 onClick={() => setIsAddEditModalOpen(false)}
-                className="px-4 py-2 border border-gray-600 rounded-md hover:bg-gray-700"
+                className="px-4 py-2 border border-gray-600 rounded-md hover:bg-gray-700 transition-all duration-300"
               >
                 Cancel
               </button>
               <button
                 onClick={handleFormSubmit}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
+                className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-all duration-300"
               >
                 {formMode === "add" ? "Add" : "Update"}
               </button>

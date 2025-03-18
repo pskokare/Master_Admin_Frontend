@@ -26,11 +26,11 @@ export default function Sidebar() {
     {
       name: "Expense Management",
       icon: <ClipboardList size={20} />,
-      route: "/expense-management",
+      route: "../Expensen-Management",
     },
     { name: "System Settings", icon: <Settings size={20} />, route: "../SystemSettings" },
-    { name: "Analytics", icon: <BarChart size={20} />, route: "/analytics" },
-    { name: "Notifications", icon: <Bell size={20} />, route: "/notifications" },
+    { name: "Analytics", icon: <BarChart size={20} />, route: "../Report-Analytics" },
+    { name: "Notifications", icon: <Bell size={20} />, route: "../Notification-Alerts" },
   ];
 
   return (
@@ -108,7 +108,7 @@ export default function Sidebar() {
           </ul>
         </nav>
 
-        <button className="w-full py-2 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 transition duration-200">
+        <button className="w-full  mt-4 py-2 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 transition duration-200">
           Logout
         </button>
       </div>
