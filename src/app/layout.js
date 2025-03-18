@@ -1,5 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import Sidebar from "./Sidebar/page"; // Adjust the path if your Sidebar is located elsewhere
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -22,7 +23,14 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <div className="flex min-h-screen">
+          {/* Sidebar is rendered globally */}
+          <Sidebar />
+          {/* Main content area */}
+          <main className="flex-1 p-4">
+            {children}
+          </main>
+        </div>
       </body>
     </html>
   );
