@@ -14,13 +14,13 @@ export default function ExpenseDashboard() {
       <div className="container mx-auto px-4 py-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-2xl font-bold">Expenses & Reports</h1>
+          <h1 className="text-2xl font-bold mt-6">Expenses & Reports</h1>
           <div className="flex gap-2">
-            <button className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center gap-2">
-              <FileText className="h-5 w-5" />
+            <button className="bg-red-600 mt-8 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center gap-2">
+              <FileText className="h-5  w-5" />
               Export PDF
             </button>
-            <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2">
+            <button className="bg-blue-600 mt-8 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2">
               <FileSpreadsheet className="h-5 w-5" />
               Export CSV
             </button>

@@ -1,5 +1,4 @@
 "use client";
-
 import React, { useState } from "react";
 import { Eye, Edit2, Trash2, Plus } from "lucide-react";
 
@@ -56,7 +55,6 @@ export default function DriverManagementPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("All");
   const [notification, setNotification] = useState("");
-
   // Modal state for Add/Edit / View
   const [isModalOpen, setIsModalOpen] = useState(false);
   // formMode can be "add", "edit", or "view"
@@ -152,23 +150,27 @@ export default function DriverManagementPage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // Validations as per Indian norms
+  const validateForm = () => {
+    const nameRegex = /^[a-zA-Z ]{3,}$/;
+    const mobileRegex = /^[6-9]\d{9}$/;
+    const aadharRegex = /^\d{4}-\d{4}-\d{4}$/;
+    const panRegex = /^[A-Z]{5}\d{4}[A-Z]$/;
+    const dateRegex = /^\d{2}-\d{2}-\d{4}$/;
+    if (!nameRegex.test(formData.name)) return "Invalid name.";
+    if (!mobileRegex.test(formData.mobileNo)) return "Invalid mobile number.";
+    if (!aadharRegex.test(formData.aadhar)) return "Invalid Aadhar number.";
+    if (!panRegex.test(formData.panCard)) return "Invalid PAN card number.";
+    if (!dateRegex.test(formData.dob) || !dateRegex.test(formData.joiningDate))
+      return "Invalid date format (DD-MM-YYYY).";
+    return "";
+  };
+
   const handleFormSubmit = () => {
     if (formMode !== "view") {
-      if (
-        !formData.name.trim() ||
-        !formData.licenseNo.trim() ||
-        !formData.cabNo.trim() ||
-        !formData.mobileNo.trim() ||
-        !formData.address.trim() ||
-        !formData.aadhar.trim() ||
-        !formData.panCard.trim() ||
-        !formData.dob.trim() ||
-        !formData.joiningDate.trim() ||
-        !formData.experience.trim() ||
-        !formData.bankDetails.trim() ||
-        !formData.emergencyContact.trim()
-      ) {
-        alert("All fields are required.");
+      const validationError = validateForm();
+      if (validationError) {
+        alert(validationError);
         return;
       }
     }
@@ -178,9 +180,7 @@ export default function DriverManagementPage() {
     } else if (formMode === "edit") {
       const confirmUpdate = confirm("Do you want to update this driver?");
       if (!confirmUpdate) return;
-      setDrivers((prev) =>
-        prev.map((d) => (d.id === formData.id ? formData : d))
-      );
+      setDrivers((prev) => prev.map((d) => (d.id === formData.id ? formData : d)));
       showNotification(`Driver ${formData.name} updated successfully!`);
     }
     setIsModalOpen(false);
@@ -189,8 +189,7 @@ export default function DriverManagementPage() {
   const closeModal = () => setIsModalOpen(false);
 
   return (
-    <div className="bg-gray-900 text-white min-h-screen p-4 transition-all duration-300">
-      {/* Notification Toast */}
+    <div className="bg-gray-900 text-white min-h-screen p-4 h-full " style={{ height: "100%" }}>
       {notification && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="bg-indigo-600 text-white px-6 py-3 rounded-md shadow-lg transition-all duration-300 animate-fadeIn">
@@ -198,16 +197,14 @@ export default function DriverManagementPage() {
           </div>
         </div>
       )}
-
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-center justify-between mb-6 mt-5">
         <div
           className="transition-transform duration-700 transform hover:rotateY-180"
           style={{ perspective: "1000px" }}
-          onMouseEnter={(e) => (e.currentTarget.style.transform = "rotateY(180deg)") }
-          onMouseLeave={(e) => (e.currentTarget.style.transform = "rotateY(0deg)") }
+          onMouseEnter={(e) => (e.currentTarget.style.transform = "rotateY(180deg)")}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "rotateY(0deg)")}
         >
-          <h1 className="text-3xl font-semibold transition-all duration-300 hover:scale-105">
+          <h1 className="text-3xl font-semibold transition-all duration-300 hover:scale-105 mt-5">
             Driver Management
           </h1>
         </div>
@@ -219,8 +216,6 @@ export default function DriverManagementPage() {
           Add Driver
         </button>
       </div>
-
-      {/* Search & Filter Row */}
       <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
         <input
           type="text"
@@ -247,8 +242,6 @@ export default function DriverManagementPage() {
           Filters
         </button>
       </div>
-
-      {/* Drivers Table */}
       <div className="overflow-x-auto rounded-md bg-gray-800 shadow-lg transition-all duration-300 hover:scale-105">
         <table className="min-w-full text-left border-collapse">
           <thead className="bg-gray-700 border-b border-gray-600">
@@ -264,43 +257,83 @@ export default function DriverManagementPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredDrivers.map((driver) => (
-              <tr
-                key={driver.id}
-                className="border-b border-gray-700 transition-colors duration-300 hover:bg-gray-700"
-              >
-                <td className="p-3">{driver.name}</td>
-                <td className="p-3">{driver.licenseNo}</td>
-                <td className="p-3">{driver.cabNo}</td>
-                <td className="p-3">{driver.mobileNo}</td>
-                <td className="p-3">{driver.address}</td>
-                <td className="p-3">{driver.aadhar}</td>
-                <td className="p-3">{driver.panCard}</td>
-                <td className="p-3">
-                  <div className="flex gap-2">
-                    <button
-                      className="text-indigo-400 transition-all duration-300 hover:scale-110 hover:shadow-md"
-                      onClick={() => handleView(driver)}
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      className="text-blue-400 transition-all duration-300 hover:scale-110 hover:shadow-md"
-                      onClick={() => handleEdit(driver)}
-                    >
-                      <Edit2 size={16} />
-                    </button>
-                    <button
-                      className="text-red-400 transition-all duration-300 hover:scale-110 hover:shadow-md"
-                      onClick={() => handleDelete(driver)}
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
-            {filteredDrivers.length === 0 && (
+            {drivers
+              .filter((driver) => {
+                const query = searchQuery.toLowerCase();
+                if (filterType === "All") {
+                  return (
+                    driver.name.toLowerCase().includes(query) ||
+                    driver.licenseNo.toLowerCase().includes(query) ||
+                    driver.cabNo.toLowerCase().includes(query) ||
+                    driver.mobileNo.toLowerCase().includes(query)
+                  );
+                } else if (filterType === "Name") {
+                  return driver.name.toLowerCase().includes(query);
+                } else if (filterType === "License") {
+                  return driver.licenseNo.toLowerCase().includes(query);
+                } else if (filterType === "Cab") {
+                  return driver.cabNo.toLowerCase().includes(query);
+                } else if (filterType === "Mobile") {
+                  return driver.mobileNo.toLowerCase().includes(query);
+                }
+                return true;
+              })
+              .map((driver) => (
+                <tr
+                  key={driver.id}
+                  className="border-b border-gray-700 transition-colors duration-300 hover:bg-gray-700"
+                >
+                  <td className="p-3">{driver.name}</td>
+                  <td className="p-3">{driver.licenseNo}</td>
+                  <td className="p-3">{driver.cabNo}</td>
+                  <td className="p-3">{driver.mobileNo}</td>
+                  <td className="p-3">{driver.address}</td>
+                  <td className="p-3">{driver.aadhar}</td>
+                  <td className="p-3">{driver.panCard}</td>
+                  <td className="p-3">
+                    <div className="flex gap-2">
+                      <button
+                        className="text-indigo-400 transition-all duration-300 hover:scale-110 hover:shadow-md"
+                        onClick={() => handleView(driver)}
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        className="text-blue-400 transition-all duration-300 hover:scale-110 hover:shadow-md"
+                        onClick={() => handleEdit(driver)}
+                      >
+                        <Edit2 size={16} />
+                      </button>
+                      <button
+                        className="text-red-400 transition-all duration-300 hover:scale-110 hover:shadow-md"
+                        onClick={() => handleDelete(driver)}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            {drivers.filter((driver) => {
+              const query = searchQuery.toLowerCase();
+              if (filterType === "All") {
+                return (
+                  driver.name.toLowerCase().includes(query) ||
+                  driver.licenseNo.toLowerCase().includes(query) ||
+                  driver.cabNo.toLowerCase().includes(query) ||
+                  driver.mobileNo.toLowerCase().includes(query)
+                );
+              } else if (filterType === "Name") {
+                return driver.name.toLowerCase().includes(query);
+              } else if (filterType === "License") {
+                return driver.licenseNo.toLowerCase().includes(query);
+              } else if (filterType === "Cab") {
+                return driver.cabNo.toLowerCase().includes(query);
+              } else if (filterType === "Mobile") {
+                return driver.mobileNo.toLowerCase().includes(query);
+              }
+              return true;
+            }).length === 0 && (
               <tr>
                 <td colSpan={8} className="p-3 text-center text-gray-400">
                   No drivers found.
@@ -310,12 +343,9 @@ export default function DriverManagementPage() {
           </tbody>
         </table>
       </div>
-
-      {/* Modal for Add/Edit / View */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-2 transition-all duration-300 animate-fadeIn">
           <div className="bg-gray-800 text-white rounded-md w-full max-w-4xl p-6 relative shadow-xl transition-all duration-300">
-            {/* Modal Header */}
             <div className="p-4 border-b border-gray-700 flex items-center justify-between">
               <h2 className="text-2xl font-semibold">
                 {formMode === "add"
@@ -331,10 +361,8 @@ export default function DriverManagementPage() {
                 &times;
               </button>
             </div>
-            {/* Modal Content – Responsive horizontal grid */}
             <div className="max-h-[80vh] overflow-y-auto p-4">
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                {/* ID */}
                 <div>
                   <label className="block text-sm mb-1">ID</label>
                   <input
@@ -345,7 +373,6 @@ export default function DriverManagementPage() {
                     className="w-full border border-gray-600 rounded-md px-2 py-1 bg-gray-700 text-white opacity-75 transition-all duration-300"
                   />
                 </div>
-                {/* Name */}
                 <div>
                   <label className="block text-sm mb-1">Name</label>
                   <input
@@ -358,7 +385,6 @@ export default function DriverManagementPage() {
                     placeholder="Enter driver's name"
                   />
                 </div>
-                {/* License No. */}
                 <div>
                   <label className="block text-sm mb-1">License No.</label>
                   <input
@@ -371,7 +397,6 @@ export default function DriverManagementPage() {
                     placeholder="Enter license number"
                   />
                 </div>
-                {/* Cab No. */}
                 <div>
                   <label className="block text-sm mb-1">Cab No.</label>
                   <input
@@ -384,7 +409,6 @@ export default function DriverManagementPage() {
                     placeholder="Enter cab number"
                   />
                 </div>
-                {/* Mobile No. */}
                 <div>
                   <label className="block text-sm mb-1">Mobile No.</label>
                   <input
@@ -397,7 +421,6 @@ export default function DriverManagementPage() {
                     placeholder="Enter mobile number"
                   />
                 </div>
-                {/* Address */}
                 <div>
                   <label className="block text-sm mb-1">Address</label>
                   <input
@@ -410,7 +433,6 @@ export default function DriverManagementPage() {
                     placeholder="Enter address"
                   />
                 </div>
-                {/* Aadhar */}
                 <div>
                   <label className="block text-sm mb-1">Aadhar</label>
                   <input
@@ -423,7 +445,6 @@ export default function DriverManagementPage() {
                     placeholder="XXXX-XXXX-XXXX"
                   />
                 </div>
-                {/* PAN Card */}
                 <div>
                   <label className="block text-sm mb-1">PAN Card</label>
                   <input
@@ -436,7 +457,6 @@ export default function DriverManagementPage() {
                     placeholder="ABCDE1234F"
                   />
                 </div>
-                {/* DOB */}
                 <div>
                   <label className="block text-sm mb-1">DOB</label>
                   <input
@@ -449,7 +469,6 @@ export default function DriverManagementPage() {
                     placeholder="DD-MM-YYYY"
                   />
                 </div>
-                {/* Joining Date */}
                 <div>
                   <label className="block text-sm mb-1">Joining Date</label>
                   <input
@@ -462,7 +481,6 @@ export default function DriverManagementPage() {
                     placeholder="DD-MM-YYYY"
                   />
                 </div>
-                {/* Experience */}
                 <div>
                   <label className="block text-sm mb-1">Experience</label>
                   <input
@@ -475,7 +493,6 @@ export default function DriverManagementPage() {
                     placeholder="e.g. 8 years"
                   />
                 </div>
-                {/* Bank Details */}
                 <div>
                   <label className="block text-sm mb-1">Bank Details</label>
                   <input
@@ -488,7 +505,6 @@ export default function DriverManagementPage() {
                     placeholder="Bank - XXXXXXXX"
                   />
                 </div>
-                {/* Emergency Contact */}
                 <div>
                   <label className="block text-sm mb-1">Emergency Contact</label>
                   <input

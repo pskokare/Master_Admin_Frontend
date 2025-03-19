@@ -1,8 +1,29 @@
 "use client"
 
 import React, { useState } from "react"
-import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
-import { ArrowDown, ArrowUp, Calendar, Car, ChevronDown, Download, DollarSign, Star, Zap } from "lucide-react"
+import {
+  BarChart,
+  Bar,
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+  Tooltip,
+  Legend,
+} from "recharts"
+import {
+  ArrowDown,
+  ArrowUp,
+  Calendar,
+  Car,
+  ChevronDown,
+  Download,
+  DollarSign,
+  Star,
+  Zap,
+} from "lucide-react"
 
 export default function AnalyticsDashboard() {
   const [activeTab, setActiveTab] = useState("revenue")
@@ -28,11 +49,17 @@ export default function AnalyticsDashboard() {
 
   // Custom Card component
   const Card = ({ children, className = "" }) => (
-    <div className={`bg-gray-900 border border-gray-800 rounded-lg overflow-hidden ${className}`}>{children}</div>
+    <div
+      className={`bg-gray-900 border border-gray-800 rounded-lg overflow-hidden transition-transform duration-300 hover:scale-105 ${className} animate-fadeIn`}
+    >
+      {children}
+    </div>
   )
 
   // Custom CardHeader component
-  const CardHeader = ({ children, className = "" }) => <div className={`p-4 pb-2 ${className}`}>{children}</div>
+  const CardHeader = ({ children, className = "" }) => (
+    <div className={`p-4 pb-2 ${className}`}>{children}</div>
+  )
 
   // Custom CardTitle component
   const CardTitle = ({ children, className = "" }) => (
@@ -40,7 +67,9 @@ export default function AnalyticsDashboard() {
   )
 
   // Custom CardContent component
-  const CardContent = ({ children, className = "" }) => <div className={`p-4 pt-0 ${className}`}>{children}</div>
+  const CardContent = ({ children, className = "" }) => (
+    <div className={`p-4 pt-0 ${className}`}>{children}</div>
+  )
 
   // Custom Button component
   const Button = ({ children, variant = "default", className = "", ...props }) => {
@@ -54,68 +83,32 @@ export default function AnalyticsDashboard() {
     }
 
     return (
-      <button className={`${baseClasses} ${variantClasses[variant]} ${className}`} {...props}>
+      <button
+        className={`${baseClasses} ${variantClasses[variant]} ${className} animate-fadeIn`}
+        {...props}
+      >
         {children}
       </button>
     )
   }
 
-  // Custom Tabs components
-  const Tabs = ({ children, defaultValue, value, onValueChange }) => {
-    return (
-      <div className="tabs">
-        {React.Children.map(children, (child) => {
-          if (
-            child.type === TabsList ||
-            child.type === TabsContent ||
-            child.props?.type === "tabs-list" ||
-            child.props?.type === "tabs-content"
-          ) {
-            return React.cloneElement(child, { value, onValueChange })
-          }
-          return child
-        })}
-      </div>
-    )
-  }
-
-  const TabsList = ({ children, className = "" }) => (
-    <div className={`inline-flex h-10 items-center justify-center rounded-md bg-gray-900 p-1 ${className}`}>
-      {children}
-    </div>
-  )
-
-  const TabsTrigger = ({ children, value, className = "" }) => (
-    <button
-      className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 ${activeTab === value ? "bg-gray-800" : ""} ${className}`}
-      onClick={() => setActiveTab(value)}
-    >
-      {children}
-    </button>
-  )
-
-  const TabsContent = ({ children, value, className = "" }) =>
-    activeTab === value ? (
-      <div
-        className={`mt-2 ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${className}`}
-      >
-        {children}
-      </div>
-    ) : null
-
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8">
+    <div className="min-h-screen bg-black text-white p-4 md:p-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <h1 className="text-2xl font-bold">Reports & Analytics</h1>
-          <div className="flex items-center gap-3 mt-4 md:mt-0">
-            <Button variant="outline" className="h-10 px-4 py-2">
+        <div className="flex flex-col md:flex-row mt-8 justify-between items-start md:items-center mb-6 animate-fadeIn">
+          <h1 className="text-2xl font-bold animate-fadeIn">Reports & Analytics</h1>
+          <div className="flex items-center gap-3 mt-4 md:mt-0 animate-fadeIn">
+            <Button
+              variant="outline"
+              className="h-10 px-4 py-2"
+              onClick={() => alert("Displaying last 30 days' data!")}
+            >
               <Calendar className="h-4 w-4 mr-2" />
               Last 30 Days
               <ChevronDown className="h-4 w-4 ml-2" />
             </Button>
-            <Button className="h-10 px-4 py-2">
+            <Button className="h-10 px-4 py-2" onClick={() => alert("Report exported!")}>
               <Download className="h-4 w-4 mr-2" />
               Export Report
             </Button>
@@ -123,7 +116,7 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* Key Metrics */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-fadeIn">
           <Card>
             <CardHeader>
               <CardTitle className="text-sm text-gray-400">Total Rides</CardTitle>
@@ -202,10 +195,10 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* Sales Title */}
-        <h2 className="text-xl font-semibold mb-6">Sales</h2>
+        <h2 className="text-xl font-semibold mb-6 animate-fadeIn">Sales</h2>
 
         {/* Charts Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-fadeIn">
           {/* Pie Chart */}
           <Card>
             <CardHeader>
@@ -301,30 +294,36 @@ export default function AnalyticsDashboard() {
         </div>
 
         {/* Tabs Section */}
-        <div className="mb-4">
+        <div className="mb-4 animate-fadeIn">
           <div>
-            <div className="flex justify-between items-center mb-4">
-              <div className="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 p-1">
+            <div className="flex justify-between items-center mb-4 animate-fadeIn">
+              <div className="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 p-1 animate-fadeIn">
                 <button
-                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ${activeTab === "revenue" ? "bg-gray-800" : ""}`}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ${
+                    activeTab === "revenue" ? "bg-gray-800" : ""
+                  } animate-fadeIn`}
                   onClick={() => setActiveTab("revenue")}
                 >
                   Revenue
                 </button>
                 <button
-                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ${activeTab === "expenses" ? "bg-gray-800" : ""}`}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ${
+                    activeTab === "expenses" ? "bg-gray-800" : ""
+                  } animate-fadeIn`}
                   onClick={() => setActiveTab("expenses")}
                 >
                   Expenses
                 </button>
                 <button
-                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ${activeTab === "customer" ? "bg-gray-800" : ""}`}
+                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ${
+                    activeTab === "customer" ? "bg-gray-800" : ""
+                  } animate-fadeIn`}
                   onClick={() => setActiveTab("customer")}
                 >
                   Customer Analytics
                 </button>
               </div>
-              <button className="text-blue-500 hover:underline">View Details</button>
+              <button className="text-blue-500 hover:underline animate-fadeIn">View Details</button>
             </div>
 
             {activeTab === "revenue" && (
@@ -365,4 +364,3 @@ export default function AnalyticsDashboard() {
     </div>
   )
 }
-

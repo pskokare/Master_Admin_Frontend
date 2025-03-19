@@ -93,7 +93,7 @@ export default function Sidebar() {
             className="absolute inset-0 bg-black opacity-50"
             onClick={() => setIsOpen(false)}
           ></div>
-          <div className="absolute top-0 left-0 w-64 h-full bg-gray-900 p-6 flex flex-col">
+          <div className="absolute top-0 left-0 w-64  bg-gray-900 p-6 flex flex-col"  style={{ height: "50%" }} >
             <div className="flex items-center mb-6">
               <span className="text-2xl font-bold text-white">Cab Admin</span>
               <button className="ml-auto text-white" onClick={() => setIsOpen(false)}>
@@ -121,11 +121,12 @@ export default function Sidebar() {
                   </li>
                 ))}
               </ul>
-            </nav>
-
-            <button className="w-full py-2 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 transition duration-200">
+              <button className="w-full py-2 bg-indigo-600 rounded-lg text-white hover:bg-indigo-500 transition duration-200">
               Logout
             </button>
+            </nav>
+
+          
           </div>
         </div>
       )}

@@ -99,7 +99,7 @@ export default function RidesPage() {
   return (
     <div className="p-6 bg-gray-900 min-h-screen text-white">
       {/* Page Title */}
-      <h1 className="text-2xl font-bold mb-6">Rides</h1>
+      <h1 className="text-2xl font-bold mb-6 mt-6">Rides</h1>
 
       {/* Metrics Section */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">

@@ -99,7 +99,7 @@ export default function CabManagementDashboard() {
           onMouseEnter={(e) => (e.currentTarget.style.transform = "rotateY(180deg)")}
           onMouseLeave={(e) => (e.currentTarget.style.transform = "rotateY(0deg)")}
         >
-          <h1 className="text-3xl leading-loose font-bold text-white transition-all duration-300">
+          <h1 className="text-3xl leading-loose font-bold text-white mt-6 transition-all duration-300">
             Cab Management
           </h1>
         </div>
