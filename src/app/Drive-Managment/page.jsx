@@ -1,6 +1,7 @@
 "use client";
 import React, { useState } from "react";
 import { Eye, Edit2, Trash2, Plus } from "lucide-react";
+import axios from "axios";
 
 const initialDrivers = [
   {
@@ -125,25 +126,30 @@ export default function DriverManagementPage() {
     setIsModalOpen(true);
   };
 
-  const handleEdit = (driver) => {
+  const handleEdit = async (driver) => {
+    setFormData(driver);
     setFormMode("edit");
-    setFormData({ ...driver });
     setIsModalOpen(true);
   };
+  
 
-  const handleView = (driver) => {
+  const handleView = async(driver) => {
     setFormMode("view");
-    setFormData({ ...driver });
+    setFormData(driver);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (driver) => {
-    const confirmDelete = confirm(`Are you sure you want to delete ${driver.name}?`);
-    if (confirmDelete) {
-      setDrivers((prev) => prev.filter((d) => d.id !== driver.id));
-      showNotification(`Driver ${driver.name} deleted successfully!`);
-    }
-  };
+  const handleDelete = async (driver) => {
+  if (!window.confirm(`Are you sure you want to delete ${driver.name}?`)) return;
+
+  try {
+    await axios.delete(`http://localhost:5000/api/profile/${driver.id}`);
+    setDrivers(drivers.filter((d) => d.id !== driver.id));
+  } catch (error) {
+    console.error("Error deleting driver:", error);
+  }
+};
+
 
   const handleFormChange = (e) => {
     const { name, value } = e.target;
@@ -166,24 +172,21 @@ export default function DriverManagementPage() {
     return "";
   };
 
-  const handleFormSubmit = () => {
-    if (formMode !== "view") {
-      const validationError = validateForm();
-      if (validationError) {
-        alert(validationError);
-        return;
+  const handleFormSubmit = async () => {
+    try {
+      if (formMode === "edit") {
+        const response = await axios.put(`http://localhost:5000/api/profile/${formData.id}`, formData);
+        setDrivers((prev) =>
+          prev.map((d) => (d.id === formData.id ? response.data : d))
+        );
+      } else {
+        const response = await axios.post(`http://localhost:5000/api/drivers`, formData);
+        setDrivers([...drivers, response.data]);
       }
+      closeModal();
+    } catch (error) {
+      console.error("Error updating driver:", error);
     }
-    if (formMode === "add") {
-      setDrivers((prev) => [...prev, formData]);
-      showNotification(`Driver ${formData.name} added successfully!`);
-    } else if (formMode === "edit") {
-      const confirmUpdate = confirm("Do you want to update this driver?");
-      if (!confirmUpdate) return;
-      setDrivers((prev) => prev.map((d) => (d.id === formData.id ? formData : d)));
-      showNotification(`Driver ${formData.name} updated successfully!`);
-    }
-    setIsModalOpen(false);
   };
 
   const closeModal = () => setIsModalOpen(false);
@@ -541,3 +544,6 @@ export default function DriverManagementPage() {
     </div>
   );
 }
+
+
+

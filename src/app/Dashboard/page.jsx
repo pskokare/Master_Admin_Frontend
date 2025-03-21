@@ -1,16 +1,108 @@
 "use client";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion"; // for animations
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { Search } from "lucide-react";
+import axios from "axios";
 
 export default function MasterAdminDashboardBlackTheme() {
+  const [drivers, setDrivers] = useState([]);
+  const [loading, setLoading] = useState(true); // Loading state for API call
+  const [error, setError] = useState(null); // Error state
+
+  const [cabs, setCabs] = useState([]);
+  const [subAdmin, setSubAdmin] = useState([]);
+
+  // sub-admin
+  useEffect(() => {
+    const fetchSubAdmin = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/admin/sub-admin-count"
+        ); 
+        console.log("API Response:", response.data); // Debugging log
+  
+        // Check if response is an object with count property
+        if (response.data && typeof response.data.count === "number") {
+          setSubAdmin(response.data.count); // Store count directly
+        } else {
+          console.error("Unexpected API response format:", response.data);
+          setError("Invalid API response format");
+        }
+      } catch (error) {
+        console.error("Error fetching sub-admin:", error);
+        setError("Failed to fetch sub-admin");
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchSubAdmin();
+  }, []);
+  
+  const totalSubAdmin = subAdmin; // Since we now store the count directly
+  
+  
+  
+
+  // driver
+  useEffect(() => {
+    const fetchDrivers = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:5000/api/driver/profile"
+        ); // Ensure correct backend URL
+        console.log("API Response:", response.data); // Debugging log
+        console.log("hello")
+
+        if (Array.isArray(response.data)) {
+          setDrivers(response.data);
+        } else {
+          console.error("Unexpected API response format:", response.data);
+          setError("Invalid API response format");
+        }
+      } catch (error) {
+        console.error("Error fetching drivers:", error);
+        setError("Failed to fetch drivers");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDrivers();
+  }, []);
+
+  const totalDrivers = drivers.length;
+
+  // cab
+  useEffect(() => {
+    const fetchCabs = async () => {
+      try {
+        const response = await axios.get("http://localhost:5000/api/cabs/"); // Ensure correct backend URL
+        console.log("API Response:", response.data); // Debugging log
+        if (Array.isArray(response.data)) {
+          setCabs(response.data);
+        } else {
+          console.error("Unexpected API response format:", response.data);
+          setError("Invalid API response format");
+        }
+      } catch (error) {
+        console.error("Error fetching cabs:", error);
+        setError("Failed to fetch cabs");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchCabs();
+  }, []);
+
+  const totalCabs = cabs.length;
+
   // Updated data with exact text: "1st quater, 2nd quater, 3rd quester, 4th quater"
   const data = [
-    { name: "1st quater", value: 25, color: "#6366F1" },  // Indigo
-    { name: "2nd quater", value: 25, color: "#10B981" },  // Green
+    { name: "1st quater", value: 25, color: "#6366F1" }, // Indigo
+    { name: "2nd quater", value: 25, color: "#10B981" }, // Green
     { name: "3rd quester", value: 25, color: "#F59E0B" }, // Amber
-    { name: "4th quater", value: 25, color: "#EF4444" },  // Red
+    { name: "4th quater", value: 25, color: "#EF4444" }, // Red
   ];
 
   return (
@@ -58,12 +150,20 @@ export default function MasterAdminDashboardBlackTheme() {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <p className="text-sm text-gray-400 group-hover:font-semibold transition-all">
-              Total Sub-Admins
-            </p>
-            <div className="flex items-center justify-between mt-2 group-hover:font-bold transition-all">
-              <h2 className="text-2xl font-bold">248</h2>
-              <span className="text-green-400 text-sm">180 Active</span>
+            <p className="text-sm text-gray-400">Total SubAdmin</p>
+            <div className="flex items-center justify-between mt-2">
+              {loading ? (
+                <p>Loading...</p>
+              ) : error ? (
+                <p className="text-red-400">{error}</p>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold">{totalSubAdmin}</h2>
+                  <span className="text-green-400 text-sm">
+                    {Math.floor(totalSubAdmin * 0.7)} Active
+                  </span>
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -76,12 +176,20 @@ export default function MasterAdminDashboardBlackTheme() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.1 }}
           >
-            <p className="text-sm text-gray-400 group-hover:font-semibold transition-all">
-              Total Drivers
-            </p>
-            <div className="flex items-center justify-between mt-2 group-hover:font-bold transition-all">
-              <h2 className="text-2xl font-bold">1,429</h2>
-              <span className="text-green-400 text-sm">803 On</span>
+            <p className="text-sm text-gray-400">Total Drivers</p>
+            <div className="flex items-center justify-between mt-2">
+              {loading ? (
+                <p>Loading...</p>
+              ) : error ? (
+                <p className="text-red-400">{error}</p>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold">{totalDrivers}</h2>
+                  <span className="text-green-400 text-sm">
+                    {Math.floor(totalDrivers * 0.7)} Active
+                  </span>
+                </>
+              )}
             </div>
           </motion.div>
 
@@ -94,12 +202,20 @@ export default function MasterAdminDashboardBlackTheme() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <p className="text-sm text-gray-400 group-hover:font-semibold transition-all">
-              Total Cabs
-            </p>
-            <div className="flex items-center justify-between mt-2 group-hover:font-bold transition-all">
-              <h2 className="text-2xl font-bold">957</h2>
-              <span className="text-green-400 text-sm">632 Active</span>
+            <p className="text-sm text-gray-400">Total Cabs</p>
+            <div className="flex items-center justify-between mt-2">
+              {loading ? (
+                <p>Loading...</p>
+              ) : error ? (
+                <p className="text-red-400">{error}</p>
+              ) : (
+                <>
+                  <h2 className="text-2xl font-bold">{totalCabs}</h2>
+                  <span className="text-green-400 text-sm">
+                    {Math.floor(totalCabs * 0.7)} Active
+                  </span>
+                </>
+              )}
             </div>
           </motion.div>
         </div>
