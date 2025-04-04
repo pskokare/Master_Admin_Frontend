@@ -1,283 +1,386 @@
 "use client";
-import React, { useState } from "react";
-import { ChevronLeft, ChevronRight, CreditCard, MapPin } from "lucide-react";
-import * as Switch from "@radix-ui/react-switch"; // Import Radix UI Switch
+import { useState, useEffect } from "react";
+import { Settings, X, Search, ArrowLeft } from "lucide-react";
+import * as Switch from "@radix-ui/react-switch";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export default function SystemSettingsPage() {
-  const [roles, setRoles] = useState({
-    admin: true,
+  const router = useRouter();
+
+  // State for the selected sub-admin
+  const [selectedSubAdmin, setSelectedSubAdmin] = useState(null);
+
+  // For the initial search box (only used if no sub-admin is selected)
+  const [subAdminName, setSubAdminName] = useState("");
+  const [hasSearched, setHasSearched] = useState(false);
+
+  // Track whether the user has logged out
+  const [loggedOut, setLoggedOut] = useState(false);
+
+  // For animative message when a setting is changed after logout or in settings
+  const [notification, setNotification] = useState("");
+
+  // Super Admin toggles
+  // const [superAdmin, setSuperAdmin] = useState({
+  //   dashboard: true,
+  //   subAdmin: false,
+  //   driverManagement: true,
+  //   cabManagement: false,
+  //   rides: false,
+  //   expenseManagement: false,
+  //   analytics: false,
+  // })
+
+  // Sub Admin toggles
+  const [subAdmin, setSubAdmin] = useState({
+    dashboard: false,
     subAdmin: true,
-    driver: false,
+    driverManagement: false,
+    cabManagement: true,
+    rides: false,
+    expenseManagement: true,
+    analytics: false,
   });
 
-  const [security, setSecurity] = useState({
-    twoFactor: true,
-    passwordPolicies: true,
-  });
+  // Settings Drawer visibility
+  const [openSettings, setOpenSettings] = useState(false);
 
-  const [integrations, setIntegrations] = useState({
-    googleMaps: true,
+  // Settings toggles
+  const [settings, setSettings] = useState({
+    multiLanguage: false,
+    googleMap: true,
     paymentGateway: false,
-  });
-
-  const [features, setFeatures] = useState({
-    autoLogout: true,
-    bulkUserImport: false,
-    multiLanguage: true,
     darkMode: false,
-    autoArchive: true,
   });
 
+  // Load selected sub-admin from localStorage on component mount
+  useEffect(() => {
+    try {
+      const storedSubAdmin = localStorage.getItem("selectedSubAdmin");
+      if (storedSubAdmin) {
+        const parsedSubAdmin = JSON.parse(storedSubAdmin);
+        setSelectedSubAdmin(parsedSubAdmin);
+        setSubAdminName(parsedSubAdmin.name);
+        setHasSearched(true);
+      }
+    } catch (error) {
+      console.error("Error loading selected sub-admin:", error);
+    }
+  }, []);
+
+  // Helper to render a Switch with label
+  const renderToggle = (label, checked, onChange) => {
+    return (
+      <div className="flex items-center justify-between py-2">
+        <span className="font-medium">{label}</span>
+        <Switch.Root
+          checked={checked}
+          onCheckedChange={onChange}
+          className="w-11 h-6 bg-gray-300 rounded-full relative transition-colors data-[state=checked]:bg-blue-500"
+        >
+          <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
+        </Switch.Root>
+      </div>
+    );
+  };
+
+  // Handle sub-admin name search
+  const handleSearch = () => {
+    if (subAdminName.trim()) {
+      setHasSearched(true);
+      setLoggedOut(false);
+    }
+  };
+
+  // Handle back button to return to sub-admin management
+  const handleBack = () => {
+    router.push("/sub-admin-management");
+  };
+
+  // Handle logout in settings: resets search box and sets loggedOut to true
+  const handleLogout = () => {
+    setHasSearched(false);
+    setLoggedOut(true);
+    setSubAdminName("");
+    setSelectedSubAdmin(null);
+    setOpenSettings(false);
+    localStorage.removeItem("selectedSubAdmin");
+  };
+
+  // Handle toggles in the Settings drawer.
+  // All notification messages now appear on the left side.
+  const handleSettingChange = (key, value) => {
+    setSettings((prev) => ({ ...prev, [key]: value }));
+    setNotification(
+      `${subAdminName || "User"}: ${key} changed to ${
+        value ? "Enabled" : "Disabled"
+      }`
+    );
+    setTimeout(() => setNotification(""), 2000);
+  };
+
+  // Handle sub-admin toggle changes.
+  const handleSubAdminToggleChange = (key, value) => {
+    setSubAdmin((prev) => ({ ...prev, [key]: value }));
+    setNotification(
+      `${subAdminName || "User"}: ${key} changed to ${
+        value ? "Enabled" : "Disabled"
+      }`
+    );
+    setTimeout(() => setNotification(""), 2000);
+  };
+
+  useEffect(() => {
+    const subDetail = JSON.parse(localStorage.getItem("selectedSubAdmin"));
+
+    if (!subDetail || !subDetail._id) return; // Ensure subDetail exists
+
+    const updatePermissions = async () => {
+      try {
+        const response = await axios.post(
+          "http://localhost:5000/api/subAdminPermissions/sub-admin",
+          {
+            subAdminId: subDetail._id,
+            name: subDetail.name,
+            permissions: subAdmin,
+          },
+          {
+            headers: {
+              "Content-Type": "application/json",
+            },
+          }
+        );
+        console.log("Permissions updated:", response.data);
+      } catch (error) {
+        console.error(
+          "Error updating permissions:",
+          error.response ? error.response.data : error.message
+        );
+      }
+    };
+
+    updatePermissions();
+  }, [subAdmin]); // ✅ Runs only when `subAdmin` state changes
+
+  // console.log(subAdmin);
+  // console.log(localStorage.getItem("selectedSubAdmin"));
   return (
-    /** 
-     * 1) Added margin-left (md:ml-64) to avoid overlap with sidebar on desktop if needed
-     * 2) p-14 for spacing and bg-gray-900 for a consistent dark background
-     * 3) min-h-screen to fill vertical space
-     */
-    <div className="p-14 bg-gray-900 min-h-screen text-white">
-      <h1 className="text-2xl font-bold mb-6 border-b pb-4">System Settings</h1>
+    <div className="min-h-screen h-full bg-gray-900 text-white p-6 relative overflow-hidden">
+      {/* Back button to return to sub-admin management */}
+      {selectedSubAdmin && (
+        <button
+          onClick={handleBack}
+          className="fixed top-4 left-4 p-2 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-all duration-300 z-50"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+      )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Section (2 columns on large screens) */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Roles & Permissions */}
-          <div className="bg-gray-800 rounded-md shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">Roles & Permissions</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <span className="font-medium">Admin</span>
-                <Switch.Root
-                  checked={roles.admin}
-                  onCheckedChange={(checked) =>
-                    setRoles({ ...roles, admin: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="font-medium">Sub Admin</span>
-                <Switch.Root
-                  checked={roles.subAdmin}
-                  onCheckedChange={(checked) =>
-                    setRoles({ ...roles, subAdmin: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="font-medium">Driver</span>
-                <Switch.Root
-                  checked={roles.driver}
-                  onCheckedChange={(checked) =>
-                    setRoles({ ...roles, driver: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-            </div>
-          </div>
+      {/* Animated Notification Message (Always on Left) */}
+      {notification && (
+        <div className="fixed top-20 left-4 bg-green-600 text-white px-4 py-2 rounded shadow-lg animate-fadeIn z-50">
+          {notification}
+        </div>
+      )}
 
-          {/* Security Settings */}
-          <div className="bg-gray-800 rounded-md shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">Security Settings</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <div className="font-medium">Two-Factor Authentication (2FA)</div>
-                  <div className="text-sm text-gray-400">
-                    Require 2FA for all admin users
-                  </div>
-                </div>
-                <Switch.Root
-                  checked={security.twoFactor}
-                  onCheckedChange={(checked) =>
-                    setSecurity({ ...security, twoFactor: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div>
-                  <div className="font-medium">Password Policies</div>
-                  <div className="text-sm text-gray-400">
-                    Enforce strong password requirements
-                  </div>
-                </div>
-                <Switch.Root
-                  checked={security.passwordPolicies}
-                  onCheckedChange={(checked) =>
-                    setSecurity({ ...security, passwordPolicies: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
+      {/* If user hasn't searched sub-admin name yet, show search box */}
+      {!hasSearched && (
+        <div className="flex flex-col items-center justify-center mt-10">
+          <h1 className="text-xl mb-4">Enter Sub Admin Name</h1>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Sub Admin name..."
+                className="pl-8 pr-2 py-2 rounded-md bg-gray-800 text-white placeholder-gray-400 focus:outline-none border border-gray-700"
+                value={subAdminName}
+                onChange={(e) => setSubAdminName(e.target.value)}
+              />
             </div>
-          </div>
-
-          {/* Integrations */}
-          <div className="bg-gray-800 rounded-md shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">Integrations</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center">
-                  <div className="bg-gray-900 p-2 mr-3">
-                    <MapPin className="h-5 w-5 text-gray-200" />
-                  </div>
-                  <div>
-                    <div className="font-medium">Google Maps</div>
-                    <div className="text-sm text-gray-400">API Status: Active</div>
-                  </div>
-                </div>
-                <Switch.Root
-                  checked={integrations.googleMaps}
-                  onCheckedChange={(checked) =>
-                    setIntegrations({ ...integrations, googleMaps: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <div className="flex items-center">
-                  <div className="bg-gray-900 p-2 mr-3">
-                    <CreditCard className="h-5 w-5 text-gray-200" />
-                  </div>
-                  <div>
-                    <div className="font-medium">Payment Gateway</div>
-                    <div className="text-sm text-gray-400">API Status: Inactive</div>
-                  </div>
-                </div>
-                <Switch.Root
-                  checked={integrations.paymentGateway}
-                  onCheckedChange={(checked) =>
-                    setIntegrations({ ...integrations, paymentGateway: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-            </div>
+            <button
+              className="bg-blue-600 px-4 py-2 rounded-md hover:bg-blue-700 transition-all"
+              onClick={handleSearch}
+            >
+              Search
+            </button>
           </div>
         </div>
+      )}
 
-        {/* Right Section (1 column on large screens) */}
-        <div className="space-y-6">
-          {/* System Stats */}
-          <div className="bg-gray-800 rounded-md shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">System Stats</h2>
-            <div className="space-y-6">
-              <div>
-                <div className="text-sm text-gray-400">Current Users</div>
-                <div className="text-2xl font-bold">150</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-400">Active Alerts</div>
-                <div className="text-2xl font-bold">3</div>
-              </div>
-              <div>
-                <div className="text-sm text-gray-400">System Load</div>
-                <div className="text-2xl font-bold">45%</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Extra Features */}
-          <div className="bg-gray-800 rounded-md shadow-sm p-6">
-            <h2 className="text-lg font-semibold mb-4">Extra Features</h2>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between py-2">
-                <span className="font-medium">Auto Logout</span>
-                <Switch.Root
-                  checked={features.autoLogout}
-                  onCheckedChange={(checked) =>
-                    setFeatures({ ...features, autoLogout: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="font-medium">Bulk User Import</span>
-                <Switch.Root
-                  checked={features.bulkUserImport}
-                  onCheckedChange={(checked) =>
-                    setFeatures({ ...features, bulkUserImport: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="font-medium">Multi-Language</span>
-                <Switch.Root
-                  checked={features.multiLanguage}
-                  onCheckedChange={(checked) =>
-                    setFeatures({ ...features, multiLanguage: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="font-medium">Dark Mode</span>
-                <Switch.Root
-                  checked={features.darkMode}
-                  onCheckedChange={(checked) =>
-                    setFeatures({ ...features, darkMode: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-              <div className="flex items-center justify-between py-2">
-                <span className="font-medium">Auto-Archive</span>
-                <Switch.Root
-                  checked={features.autoArchive}
-                  onCheckedChange={(checked) =>
-                    setFeatures({ ...features, autoArchive: checked })
-                  }
-                  className="w-11 h-6 bg-gray-300 rounded-full relative data-[state=checked]:bg-blue-500 transition-colors"
-                >
-                  <Switch.Thumb className="block w-4 h-4 bg-white rounded-full transition-transform translate-x-0.5 data-[state=checked]:translate-x-[26px]" />
-                </Switch.Root>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/*
-        Example pagination snippet (commented out). 
-        If you want pagination here, uncomment and adjust as needed.
-      
-      <div className="flex justify-center mt-8">
-        <div className="inline-flex items-center border rounded-full px-4 py-2">
-          <button className="p-1">
-            <ChevronLeft className="h-5 w-5" />
+      {/* Main content only shows if user has searched */}
+      {hasSearched && (
+        <>
+          {/* Animated Settings Button (Top Right) */}
+          <button
+            className="fixed top-4 right-4 p-2 bg-gray-800 rounded-full shadow-lg hover:bg-gray-700 transition-all duration-300 z-50 hover:rotate-90"
+            onClick={() => setOpenSettings(true)}
+          >
+            <Settings className="h-5 w-5" />
           </button>
-          <span className="mx-4 text-sm">6 / 13</span>
-          <button className="p-1">
-            <ChevronRight className="h-5 w-5" />
-          </button>
-        </div>
-      </div>
-      */}
+
+          {/* Overlay (dims background when settings open) */}
+          <div
+            className={`fixed inset-0 bg-black/50 z-40 transition-opacity duration-300 ${
+              openSettings ? "opacity-100" : "opacity-0 pointer-events-none"
+            }`}
+            onClick={() => setOpenSettings(false)}
+          />
+
+          {/* Settings Drawer (Slides in from the right) */}
+          <div
+            className={`fixed top-0 right-0 h-full w-64 bg-gray-800 z-50 shadow-2xl transform transition-transform duration-300 ease-in-out ${
+              openSettings ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="flex items-center justify-between px-4 py-4 border-b border-gray-700">
+              <h2 className="text-xl font-semibold">Settings</h2>
+              <button
+                className="p-1 hover:text-gray-300"
+                onClick={() => setOpenSettings(false)}
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            {/* Display the searched sub-admin name */}
+            <div className="px-4 py-2 border-b border-gray-700">
+              <p className="text-sm text-gray-400">
+                Logged in as:{" "}
+                <span className="font-semibold">{subAdminName}</span>
+              </p>
+            </div>
+            <div className="p-4 space-y-4">
+              <h3 className="font-bold text-lg">Features</h3>
+              {renderToggle("Multi-Language", settings.multiLanguage, (val) =>
+                handleSettingChange("multiLanguage", val)
+              )}
+              {renderToggle("Google Map", settings.googleMap, (val) =>
+                handleSettingChange("googleMap", val)
+              )}
+              {renderToggle("Payment Gateway", settings.paymentGateway, (val) =>
+                handleSettingChange("paymentGateway", val)
+              )}
+              {renderToggle("Dark Mode", settings.darkMode, (val) =>
+                handleSettingChange("darkMode", val)
+              )}
+
+              {/* Logout Button */}
+              <button
+                onClick={handleLogout}
+                className="mt-4 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md w-full transition-colors"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+
+          {/* Main Content: Two columns on large screens, stacked on small screens */}
+          <div className="container mx-auto mt-10 opacity-100 transition-opacity duration-700">
+            {/* Display selected sub-admin info */}
+            {selectedSubAdmin && (
+              <div className="mb-6 bg-gray-800 p-4 rounded-md shadow-lg">
+                <h2 className="text-xl font-semibold mb-2">
+                  Settings for subAdmin: {selectedSubAdmin.name}
+                </h2>
+                <div className="flex flex-wrap gap-4">
+                  <div className="text-sm text-gray-300">
+                    <span className="text-gray-400">Email:</span>{" "}
+                    {selectedSubAdmin.email}
+                  </div>
+                  <div className="text-sm text-gray-300">
+                    <span className="text-gray-400">Role:</span>{" "}
+                    {selectedSubAdmin.role}
+                  </div>
+                  <div className="text-sm text-gray-300">
+                    <span className="text-gray-400">Status:</span>{" "}
+                    {selectedSubAdmin.status}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> */}
+            {/* Master Admin Section */}
+            {/* <div className="flip-360 bg-gray-800 p-6 rounded-md shadow-2xl transform transition-all duration-1500">
+                <h2 className="text-2xl font-semibold mb-4 border-b border-gray-700 pb-2 text-center">Master Admin</h2>
+                <div className="space-y-2">
+                  {renderToggle("Dashboard", superAdmin.dashboard, (val) =>
+                    setSuperAdmin({ ...superAdmin, dashboard: val }),
+                  )}
+                  {renderToggle("Sub Admin", superAdmin.subAdmin, (val) =>
+                    setSuperAdmin({ ...superAdmin, subAdmin: val }),
+                  )}
+                  {renderToggle("Driver Management", superAdmin.driverManagement, (val) =>
+                    setSuperAdmin({ ...superAdmin, driverManagement: val }),
+                  )}
+                  {renderToggle("Cab Management", superAdmin.cabManagement, (val) =>
+                    setSuperAdmin({ ...superAdmin, cabManagement: val }),
+                  )}
+                  {renderToggle("Rides", superAdmin.rides, (val) => setSuperAdmin({ ...superAdmin, rides: val }))}
+                  {renderToggle("Expense Management", superAdmin.expenseManagement, (val) =>
+                    setSuperAdmin({ ...superAdmin, expenseManagement: val }),
+                  )}
+                  {renderToggle("Analytics", superAdmin.analytics, (val) =>
+                    setSuperAdmin({ ...superAdmin, analytics: val }),
+                  )}
+                </div>
+              </div> */}
+
+            {/* Sub Admin Section */}
+            <div className="flip-360 bg-gray-800 p-6 rounded-md shadow-2xl transform transition-all duration-1500">
+              <h2 className="text-2xl font-semibold mb-4 border-b border-gray-700 pb-2 text-center">
+                Sub Admin
+              </h2>
+              <div className="space-y-2">
+                {renderToggle("Dashboard", subAdmin.dashboard, (val) =>
+                  handleSubAdminToggleChange("dashboard", val)
+                )}
+                {renderToggle("Sub Admin", subAdmin.subAdmin, (val) =>
+                  handleSubAdminToggleChange("subAdmin", val)
+                )}
+                {renderToggle(
+                  "Driver Management",
+                  subAdmin.driverManagement,
+                  (val) => handleSubAdminToggleChange("driverManagement", val)
+                )}
+                {renderToggle("Cab Management", subAdmin.cabManagement, (val) =>
+                  handleSubAdminToggleChange("cabManagement", val)
+                )}
+                {renderToggle("Rides", subAdmin.rides, (val) =>
+                  handleSubAdminToggleChange("rides", val)
+                )}
+                {renderToggle(
+                  "Expense Management",
+                  subAdmin.expenseManagement,
+                  (val) => handleSubAdminToggleChange("expenseManagement", val)
+                )}
+                {renderToggle("Analytics", subAdmin.analytics, (val) =>
+                  handleSubAdminToggleChange("analytics", val)
+                )}
+              </div>
+            </div>
+          </div>
+          {/* </div> */}
+        </>
+      )}
+
+      {/* Custom Styles */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(-10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.3s forwards;
+        }
+      `}</style>
     </div>
   );
 }

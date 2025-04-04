@@ -1,109 +1,235 @@
-"use client";
-import React, { useState, useEffect } from "react";
-import { motion } from "framer-motion"; // for animations
-import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
-import { Search } from "lucide-react";
-import axios from "axios";
+"use client"
+import { useState, useEffect } from "react"
+import { motion } from "framer-motion" // for animations
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts"
+// import { Search } from 'lucide-react'
+import axios from "axios"
 
 export default function MasterAdminDashboardBlackTheme() {
-  const [drivers, setDrivers] = useState([]);
-  const [loading, setLoading] = useState(true); // Loading state for API call
-  const [error, setError] = useState(null); // Error state
+  const [drivers, setDrivers] = useState([])
+  const [loading, setLoading] = useState(true) // Loading state for API call
+  const [error, setError] = useState(null) // Error state
+  const [cabs, setCabs] = useState([])
+  const [subAdmin, setSubAdmin] = useState([])
 
-  const [cabs, setCabs] = useState([]);
-  const [subAdmin, setSubAdmin] = useState([]);
+  // Expense data state
+  const [expenseData, setExpenseData] = useState([])
+  const [totalExpense, setTotalExpense] = useState(0)
+  const [expenseBreakdown, setExpenseBreakdown] = useState([])
+  const [expenseLoading, setExpenseLoading] = useState(true)
+
+
 
   // sub-admin
   useEffect(() => {
     const fetchSubAdmin = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/admin/sub-admin-count"
-        ); 
-        console.log("API Response:", response.data); // Debugging log
-  
+        const response = await axios.get("http://localhost:5000/api/admin/sub-admin-count")
+        console.log("API Response:", response.data) // Debugging log
+
         // Check if response is an object with count property
         if (response.data && typeof response.data.count === "number") {
-          setSubAdmin(response.data.count); // Store count directly
+          setSubAdmin(response.data.count) // Store count directly
         } else {
-          console.error("Unexpected API response format:", response.data);
-          setError("Invalid API response format");
+          console.error("Unexpected API response format:", response.data)
+          setError("Invalid API response format")
         }
       } catch (error) {
-        console.error("Error fetching sub-admin:", error);
-        setError("Failed to fetch sub-admin");
+        console.error("Error fetching sub-admin:", error)
+        setError("Failed to fetch sub-admin")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-  
-    fetchSubAdmin();
-  }, []);
-  
-  const totalSubAdmin = subAdmin; // Since we now store the count directly
-  
-  
-  
+    }
+
+    fetchSubAdmin()
+  }, [])
+
+  const totalSubAdmin = subAdmin // Since we now store the count directly
 
   // driver
   useEffect(() => {
     const fetchDrivers = async () => {
       try {
-        const response = await axios.get(
-          "http://localhost:5000/api/driver/profile"
-        ); // Ensure correct backend URL
-        console.log("API Response:", response.data); // Debugging log
+        const response = await axios.get("http://localhost:5000/api/admin/driver-count") // Ensure correct backend URL
+        console.log("API Response:", response.data) // Debugging log
         console.log("hello")
 
-        if (Array.isArray(response.data)) {
-          setDrivers(response.data);
+        if (response.data && typeof response.data.count === "number") {
+          setDrivers(response.data.count)
         } else {
-          console.error("Unexpected API response format:", response.data);
-          setError("Invalid API response format");
+          console.error("Unexpected API response format:", response.data)
+          setError("Invalid API response format")
         }
       } catch (error) {
-        console.error("Error fetching drivers:", error);
-        setError("Failed to fetch drivers");
+        console.error("Error fetching drivers:", error)
+        setError("Failed to fetch drivers")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchDrivers();
-  }, []);
+    }
+    fetchDrivers()
+  }, [])
 
-  const totalDrivers = drivers.length;
+  const totalDrivers = drivers
 
   // cab
   useEffect(() => {
     const fetchCabs = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/cabs/"); // Ensure correct backend URL
-        console.log("API Response:", response.data); // Debugging log
-        if (Array.isArray(response.data)) {
-          setCabs(response.data);
+        const response = await axios.get("http://localhost:5000/api/admin/cab-count") // Ensure correct backend URL
+        console.log("API Response:", response.data) // Debugging log
+        if (response.data && typeof response.data.count === "number") {
+          setCabs(response.data.count)
         } else {
-          console.error("Unexpected API response format:", response.data);
-          setError("Invalid API response format");
+          console.error("Unexpected API response format:", response.data)
+          setError("Invalid API response format")
         }
       } catch (error) {
-        console.error("Error fetching cabs:", error);
-        setError("Failed to fetch cabs");
+        console.error("Error fetching cabs:", error)
+        setError("Failed to fetch cabs")
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-    fetchCabs();
-  }, []);
+    }
+    fetchCabs()
+  }, [])
 
-  const totalCabs = cabs.length;
+  const totalCabs = cabs
 
-  // Updated data with exact text: "1st quater, 2nd quater, 3rd quester, 4th quater"
-  const data = [
-    { name: "1st quater", value: 25, color: "#6366F1" }, // Indigo
-    { name: "2nd quater", value: 25, color: "#10B981" }, // Green
-    { name: "3rd quester", value: 25, color: "#F59E0B" }, // Amber
-    { name: "4th quater", value: 25, color: "#EF4444" }, // Red
-  ];
+  // Fetch expense data from the API
+  useEffect(() => {
+    const fetchExpenseData = async () => {
+      try {
+        setExpenseLoading(true)
+        const response = await axios.get("http://localhost:5000/api/admin/getExpense")
+
+        if (response.data.success && Array.isArray(response.data.data)) {
+          const expenses = response.data.data
+          setExpenseData(expenses)
+
+          // Calculate total expense across all cabs
+          const total = expenses.reduce((sum, expense) => sum + expense.totalExpense, 0)
+          setTotalExpense(total)
+
+          // Process data for charts
+          processExpenseBreakdown(expenses)
+        } else {
+          throw new Error("Invalid expense data format from API")
+        }
+      } catch (error) {
+        console.error("Error fetching expense data:", error)
+        // Set mock data for testing if API fails
+        setMockExpenseData()
+      } finally {
+        setExpenseLoading(false)
+      }
+    }
+
+    fetchExpenseData()
+  }, [])
+
+  // Set mock expense data for testing if API fails
+  const setMockExpenseData = () => {
+    const mockExpenses = [
+      {
+        cabNumber: "MH12X222",
+        totalExpense: 3180,
+        breakdown: {
+          fuel: 1700,
+          fastTag: 500,
+          tyrePuncture: 180,
+          otherProblems: 800,
+        },
+      },
+      {
+        cabNumber: "MH120000",
+        totalExpense: 3180,
+        breakdown: {
+          fuel: 1700,
+          fastTag: 500,
+          tyrePuncture: 180,
+          otherProblems: 800,
+        },
+      },
+      {
+        cabNumber: "MH12X129",
+        totalExpense: 1240,
+        breakdown: {
+          fuel: 200,
+          fastTag: 400,
+          tyrePuncture: 140,
+          otherProblems: 500,
+        },
+      },
+    ]
+    setExpenseData(mockExpenses)
+
+    // Calculate total expense
+    const total = mockExpenses.reduce((sum, expense) => sum + expense.totalExpense, 0)
+    setTotalExpense(total)
+
+    // Process data for charts
+    processExpenseBreakdown(mockExpenses)
+  }
+
+  // Process expense data for the breakdown chart
+  const processExpenseBreakdown = (expenses) => {
+    // Aggregate all breakdown values across all cabs
+    const totalBreakdown = expenses.reduce(
+      (acc, expense) => {
+        acc.fuel += expense.breakdown.fuel || 0
+        acc.fastTag += expense.breakdown.fastTag || 0
+        acc.tyrePuncture += expense.breakdown.tyrePuncture || 0
+        acc.otherProblems += expense.breakdown.otherProblems || 0
+        return acc
+      },
+      { fuel: 0, fastTag: 0, tyrePuncture: 0, otherProblems: 0 },
+    )
+
+    // Convert to array format for the chart with colors
+    const breakdownData = [
+      { name: "Fuel", value: totalBreakdown.fuel, color: "#6366F1" }, // Indigo
+      { name: "FastTag", value: totalBreakdown.fastTag, color: "#10B981" }, // Green
+      { name: "Tyre Puncture", value: totalBreakdown.tyrePuncture, color: "#F59E0B" }, // Amber
+      { name: "Other Problems", value: totalBreakdown.otherProblems, color: "#EF4444" }, // Red
+    ]
+
+    setExpenseBreakdown(breakdownData)
+  }
+
+  // Custom tooltip for the pie chart
+  const CustomPieTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-gray-800 p-2 rounded shadow-lg border border-gray-700">
+          <p className="font-medium">{payload[0].name}</p>
+          <p className="text-sm">₹{payload[0].value}</p>
+        </div>
+      )
+    }
+    return null
+  }
+
+  // Get recent expense activities
+  const getRecentExpenseActivities = () => {
+    if (!expenseData || expenseData.length === 0) {
+      return [{ text: "No recent expense activities", time: "N/A" }]
+    }
+
+    // Sort expenses by amount (in a real app, you'd sort by date)
+    const sortedExpenses = [...expenseData].sort((a, b) => b.totalExpense - a.totalExpense)
+
+    return sortedExpenses.slice(0, 3).map((expense, index) => {
+      const timeAgo = index === 0 ? "10 minutes ago" : index === 1 ? "1 hour ago" : "3 hours ago"
+      return {
+        text: `Cab ${expense.cabNumber} expense updated: ₹${expense.totalExpense}`,
+        time: timeAgo,
+      }
+    })
+  }
+
+  const recentActivities = getRecentExpenseActivities()
 
   return (
     <motion.div
@@ -117,24 +243,6 @@ export default function MasterAdminDashboardBlackTheme() {
       <header className="flex flex-col md:flex-row justify-between items-center px-4 py-3 bg-gray-800 border-b border-gray-700">
         <h1 className="text-xl font-semibold">February 15, 2025</h1>
         <div className="mt-3 md:mt-0 flex items-center gap-4">
-          {/* Search box */}
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={16}
-            />
-            <input
-              type="text"
-              placeholder="Search..."
-              className="pl-9 pr-3 py-2 bg-gray-700 text-white border border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
-            />
-          </div>
-          {/* User avatar (example) */}
-          <img
-            src="/avatar.png"
-            alt="User Avatar"
-            className="w-8 h-8 rounded-full border border-gray-600 object-cover"
-          />
         </div>
       </header>
 
@@ -159,9 +267,7 @@ export default function MasterAdminDashboardBlackTheme() {
               ) : (
                 <>
                   <h2 className="text-2xl font-bold">{totalSubAdmin}</h2>
-                  <span className="text-green-400 text-sm">
-                    {Math.floor(totalSubAdmin * 0.7)} Active
-                  </span>
+                  <span className="text-green-400 text-sm">{Math.floor(totalSubAdmin * 0.7)} Active</span>
                 </>
               )}
             </div>
@@ -185,9 +291,7 @@ export default function MasterAdminDashboardBlackTheme() {
               ) : (
                 <>
                   <h2 className="text-2xl font-bold">{totalDrivers}</h2>
-                  <span className="text-green-400 text-sm">
-                    {Math.floor(totalDrivers * 0.7)} Active
-                  </span>
+                  <span className="text-green-400 text-sm">{Math.floor(totalDrivers * 0.7)} Active</span>
                 </>
               )}
             </div>
@@ -211,9 +315,7 @@ export default function MasterAdminDashboardBlackTheme() {
               ) : (
                 <>
                   <h2 className="text-2xl font-bold">{totalCabs}</h2>
-                  <span className="text-green-400 text-sm">
-                    {Math.floor(totalCabs * 0.7)} Active
-                  </span>
+                  <span className="text-green-400 text-sm">{Math.floor(totalCabs * 0.7)} Active</span>
                 </>
               )}
             </div>
@@ -231,62 +333,46 @@ export default function MasterAdminDashboardBlackTheme() {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            <h2 className="text-lg font-semibold mb-2 group-hover:font-bold transition-all">
-              Revenue Overview
-            </h2>
+            <h2 className="text-lg font-semibold mb-2 group-hover:font-bold transition-all">Expense Overview</h2>
             <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={50}
-                    outerRadius={80}
-                    labelLine={false}
-                    dataKey="value"
-                  >
-                    {data.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
+              {expenseLoading ? (
+                <div className="flex justify-center items-center h-full">
+                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={expenseBreakdown}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={50}
+                      outerRadius={80}
+                      labelLine={false}
+                      dataKey="value"
+                      label={({ name, value }) => `${name}: ₹${value}`}
+                    >
+                      {expenseBreakdown.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip content={<CustomPieTooltip />} />
+                  </PieChart>
+                </ResponsiveContainer>
+              )}
             </div>
             <p className="text-center mt-2 text-sm text-gray-400 group-hover:font-semibold transition-all">
-              Sales
+              Total Expense: ₹{totalExpense}
             </p>
 
-            {/* Legend with exact text for each quarter */}
-            <div className="flex justify-around mt-4 text-sm">
-              <div className="flex items-center gap-1">
-                <span
-                  className="w-3 h-3 rounded-sm"
-                  style={{ backgroundColor: "#6366F1" }}
-                />
-                1st quater
-              </div>
-              <div className="flex items-center gap-1">
-                <span
-                  className="w-3 h-3 rounded-sm"
-                  style={{ backgroundColor: "#10B981" }}
-                />
-                2nd quater
-              </div>
-              <div className="flex items-center gap-1">
-                <span
-                  className="w-3 h-3 rounded-sm"
-                  style={{ backgroundColor: "#F59E0B" }}
-                />
-                3rd quester
-              </div>
-              <div className="flex items-center gap-1">
-                <span
-                  className="w-3 h-3 rounded-sm"
-                  style={{ backgroundColor: "#EF4444" }}
-                />
-                4th quater
-              </div>
+            {/* Legend for expense categories */}
+            <div className="flex flex-wrap justify-around mt-4 text-sm">
+              {expenseBreakdown.map((item, index) => (
+                <div key={index} className="flex items-center gap-1 mb-1">
+                  <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} />
+                  {item.name}
+                </div>
+              ))}
             </div>
           </motion.div>
 
@@ -299,26 +385,48 @@ export default function MasterAdminDashboardBlackTheme() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            <h2 className="text-lg font-semibold mb-2 group-hover:font-bold transition-all">
-              Recent Activity
-            </h2>
-            <ul className="space-y-2 text-sm">
-              <li className="flex items-center justify-between group-hover:font-semibold transition-all">
-                <span>New driver registered</span>
-                <span className="text-gray-400">2 minutes ago</span>
-              </li>
-              <li className="flex items-center justify-between group-hover:font-semibold transition-all">
-                <span>Ride #2458 completed</span>
-                <span className="text-gray-400">1 hour ago</span>
-              </li>
-              <li className="flex items-center justify-between group-hover:font-semibold transition-all">
-                <span>System maintenance scheduled</span>
-                <span className="text-gray-400">3 hours ago</span>
-              </li>
-            </ul>
+            <h2 className="text-lg font-semibold mb-2 group-hover:font-bold transition-all">Recent Expense Activity</h2>
+            {expenseLoading ? (
+              <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <ul className="space-y-4 text-sm">
+                {recentActivities.map((activity, index) => (
+                  <li
+                    key={index}
+                    className="flex items-center justify-between group-hover:font-semibold transition-all"
+                  >
+                    <span>{activity.text}</span>
+                    <span className="text-gray-400">{activity.time}</span>
+                  </li>
+                ))}
+
+                {/* Additional expense stats */}
+                <li className="pt-4 border-t border-gray-700">
+                  <div className="flex justify-between items-center">
+                    <span>Average Expense per Cab:</span>
+                    <span className="font-medium">
+                      ₹{expenseData.length > 0 ? Math.round(totalExpense / expenseData.length) : 0}
+                    </span>
+                  </div>
+                </li>
+                <li>
+                  <div className="flex justify-between items-center">
+                    <span>Highest Expense Category:</span>
+                    <span className="font-medium">
+                      {expenseBreakdown.length > 0
+                        ? expenseBreakdown.reduce((max, item) => (max.value > item.value ? max : item)).name
+                        : "N/A"}
+                    </span>
+                  </div>
+                </li>
+              </ul>
+            )}
           </motion.div>
         </div>
       </main>
     </motion.div>
-  );
+  )
 }
+

@@ -2,11 +2,14 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import axios from "axios"
-import { Eye, Edit2, Trash2, Search, Download, ChevronLeft, ChevronRight } from "lucide-react"
+import { Eye, Edit2, Trash2, Search, Download, ChevronLeft, ChevronRight, Settings } from "lucide-react"
 import { toast, ToastContainer } from "react-toastify"
 import "react-toastify/dist/ReactToastify.css"
+import { useRouter } from "next/navigation"
 
-export default function SubAdminManagementPage() {
+const SubAdminManagementPage = () => {
+  const router = useRouter()
+
   // State for sub-admins data
   const [subAdmins, setSubAdmins] = useState([])
   const [isLoading, setIsLoading] = useState(true)
@@ -28,11 +31,21 @@ export default function SubAdminManagementPage() {
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    password: "",
     role: "",
     status: "Active",
     phone: "",
   })
+
+  // Store the actual file object separately
+  const [profileImageFile, setProfileImageFile] = useState(null)
+  // For preview purposes
+  const [profileImagePreview, setProfileImagePreview] = useState("")
+
+  // Function to handle opening settings for a specific sub-admin
+  const handleOpenSettings = (subAdmin) => {
+    localStorage.setItem("selectedSubAdmin", JSON.stringify(subAdmin))
+    router.push("/SystemSettings")
+  }
 
   // Fetch sub-admins from the database
   const fetchSubAdmins = async () => {
@@ -126,8 +139,6 @@ export default function SubAdminManagementPage() {
       const res = await axios.put(`http://localhost:5000/api/admin/toggle-block/${id}`)
       if (res.status === 200) {
         toast.success(`Sub-admin ${res.data.status}`)
-
-        // Update the UI by fetching fresh data
         fetchSubAdmins()
       }
     } catch (error) {
@@ -142,23 +153,32 @@ export default function SubAdminManagementPage() {
     setFormData({
       name: "",
       email: "",
-      password: "",
       role: "",
       status: "Active",
       phone: "",
     })
+    setProfileImageFile(null)
+    setProfileImagePreview("")
     setIsAddEditModalOpen(true)
   }
 
   const handleEdit = (subAdmin) => {
     setFormMode("edit")
-    // Don't include password in edit mode
-    const { password, ...subAdminWithoutPassword } = subAdmin
     setFormData({
-      ...subAdminWithoutPassword,
-      password: "", // Clear password field for security
+      ...subAdmin,
     })
+    setProfileImageFile(null)
+    setProfileImagePreview(subAdmin.profileImage || "")
     setIsAddEditModalOpen(true)
+  }
+
+  const handleAvatarChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setProfileImageFile(file)
+      const previewUrl = URL.createObjectURL(file)
+      setProfileImagePreview(previewUrl)
+    }
   }
 
   const handleFormChange = (e) => {
@@ -166,57 +186,81 @@ export default function SubAdminManagementPage() {
     setFormData((prev) => ({ ...prev, [name]: value }))
   }
 
-  // Submit add/edit
+  // Handle form submission for add/edit
   const handleFormSubmit = async () => {
-    // Validate form
-    if (
-      !formData.name?.trim() ||
-      !formData.email?.trim() ||
-      (formMode === "add" && !formData.password?.trim()) ||
-      !formData.role?.trim() ||
-      !formData.phone?.trim()
-    ) {
-      toast.error("All fields are required except password when editing")
+    if (!formData.name?.trim() || !formData.email?.trim() || !formData.role?.trim() || !formData.phone?.trim()) {
+      toast.error("All fields are required")
       return
     }
 
     try {
       if (formMode === "add") {
-        const response = await axios.post("http://localhost:5000/api/admin/addNewSubAdmin", {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-          phone: formData.phone,
-          status: formData.status,
+        const formDataToSend = new FormData()
+        formDataToSend.append("name", formData.name)
+        formDataToSend.append("email", formData.email)
+        formDataToSend.append("role", formData.role)
+        formDataToSend.append("phone", formData.phone)
+        formDataToSend.append("status", formData.status)
+
+        if (profileImageFile) {
+          formDataToSend.append("profileImage", profileImageFile)
+        }
+
+        // Create the sub-admin record
+        const createResponse = await axios.post("http://localhost:5000/api/admin/addNewSubAdmin", formDataToSend, {
+          headers: { "Content-Type": "multipart/form-data" },
         })
 
-        if (response.status === 201) {
-          toast.success("Sub-admin added successfully!")
-          fetchSubAdmins() // Refresh the data
+        if (createResponse.status === 201) {
+          toast.success("Sub-admin created successfully!")
+          fetchSubAdmins() // Refresh the list
           setIsAddEditModalOpen(false)
         }
       } else {
         // Edit mode
-        const response = await axios.put(`http://localhost:5000/api/admin/updateSubAdmin/${formData._id}`, {
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-          phone: formData.phone,
-          status: formData.status,
-          // Only include password if it was provided
-          ...(formData.password?.trim() ? { password: formData.password } : {}),
-        })
+        if (profileImageFile) {
+          const formDataToSend = new FormData()
+          formDataToSend.append("name", formData.name)
+          formDataToSend.append("email", formData.email)
+          formDataToSend.append("role", formData.role)
+          formDataToSend.append("phone", formData.phone)
+          formDataToSend.append("status", formData.status)
+          formDataToSend.append("profileImage", profileImageFile)
 
-        if (response.status === 200) {
-          toast.success("Sub-admin updated successfully!")
-          fetchSubAdmins() // Refresh the data
-          setIsAddEditModalOpen(false)
+          const response = await axios.put(
+            `http://localhost:5000/api/admin/updateSubAdmin/${formData._id}`,
+            formDataToSend,
+            { headers: { "Content-Type": "multipart/form-data" } },
+          )
+
+          if (response.status === 200) {
+            toast.success("Sub-admin updated successfully!")
+            fetchSubAdmins()
+            setIsAddEditModalOpen(false)
+          }
+        } else {
+          const response = await axios.put(`http://localhost:5000/api/admin/updateSubAdmin/${formData._id}`, {
+            name: formData.name,
+            email: formData.email,
+            role: formData.role,
+            phone: formData.phone,
+            status: formData.status,
+          })
+
+          if (response.status === 200) {
+            toast.success("Sub-admin updated successfully!")
+            fetchSubAdmins()
+            setIsAddEditModalOpen(false)
+          }
         }
       }
     } catch (error) {
-      console.error("Error submitting form:", error)
-      toast.error(error.response?.data?.message || `Failed to ${formMode === "add" ? "add" : "update"} sub-admin`)
+      console.error("Error:", error)
+      const errorMsg =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        `Failed to ${formMode === "add" ? "create" : "update"} sub-admin`
+      toast.error(errorMsg)
     }
   }
 
@@ -226,20 +270,21 @@ export default function SubAdminManagementPage() {
       setFormData({
         name: "",
         email: "",
-        password: "",
         role: "",
         status: "Active",
         phone: "",
       })
+      setProfileImageFile(null)
+      setProfileImagePreview("")
     } else {
       // For edit, reset to original values
       const original = subAdmins.find((sa) => sa._id === formData._id)
       if (original) {
-        const { password, ...originalWithoutPassword } = original
         setFormData({
-          ...originalWithoutPassword,
-          password: "", // Clear password for security
+          ...original,
         })
+        setProfileImageFile(null)
+        setProfileImagePreview(original.profileImage || "")
       }
     }
   }
@@ -344,6 +389,7 @@ export default function SubAdminManagementPage() {
                 <th className="p-3 text-gray-200">Status</th>
                 <th className="p-3 text-gray-200">Actions</th>
                 <th className="p-3 text-gray-200">Block/Unblock</th>
+                <th className="p-3 text-gray-200">Settings</th>
               </tr>
             </thead>
             <tbody>
@@ -391,11 +437,20 @@ export default function SubAdminManagementPage() {
                       {subAdmin.status === "Active" ? "Block" : "Unblock"}
                     </button>
                   </td>
+                  <td className="p-3">
+                    <button
+                      onClick={() => handleOpenSettings(subAdmin)}
+                      className="px-3 py-1 text-xs font-medium rounded-md bg-blue-600 hover:bg-blue-700 transition-all text-white flex items-center gap-1"
+                    >
+                      <Settings size={14} />
+                      Open Settings
+                    </button>
+                  </td>
                 </motion.tr>
               ))}
               {currentSubAdmins.length === 0 && !isLoading && (
                 <tr>
-                  <td colSpan={6} className="p-3 text-center text-gray-400">
+                  <td colSpan={7} className="p-3 text-center text-gray-400">
                     No sub admins found.
                   </td>
                 </tr>
@@ -444,9 +499,17 @@ export default function SubAdminManagementPage() {
             </button>
             <h2 className="text-2xl font-semibold mb-4">Viewing {viewSubAdmin.name}</h2>
             <div className="flex items-center gap-4 mb-6">
-              <div className="rounded-full w-20 h-20 bg-indigo-600 flex items-center justify-center text-2xl font-bold">
-                {viewSubAdmin.name.charAt(0).toUpperCase()}
-              </div>
+              {viewSubAdmin.profileImage ? (
+                <img
+                  src={viewSubAdmin.profileImage || "/placeholder.svg"}
+                  alt={viewSubAdmin.name}
+                  className="rounded-full w-20 h-20 object-cover"
+                />
+              ) : (
+                <div className="rounded-full w-20 h-20 bg-indigo-600 flex items-center justify-center text-2xl font-bold">
+                  {viewSubAdmin.name.charAt(0).toUpperCase()}
+                </div>
+              )}
               <div>
                 <p className="text-sm text-gray-400">Role: {viewSubAdmin.role}</p>
                 <p className="text-sm text-gray-400">Status: {viewSubAdmin.status}</p>
@@ -479,8 +542,8 @@ export default function SubAdminManagementPage() {
 
       {/* ------------------ ADD/EDIT MODAL ------------------ */}
       {isAddEditModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
-          <div className="bg-gray-800 text-white rounded-md w-full max-w-md p-6 relative transition-all duration-300 ease-in-out hover:scale-105">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 p-4">
+          <div className="bg-gray-800 text-white rounded-md w-full max-w-md max-h-[90vh] p-6 relative transition-all duration-300 ease-in-out hover:scale-105 overflow-y-auto">
             <button
               className="absolute top-3 right-3 text-gray-300 hover:text-white transition-all duration-300"
               onClick={() => setIsAddEditModalOpen(false)}
@@ -491,6 +554,26 @@ export default function SubAdminManagementPage() {
               {formMode === "add" ? "Add New Sub Admin" : "Edit Sub Admin"}
             </h2>
             <div className="space-y-4">
+              {/* profileImage */}
+              <div>
+                <label className="block text-sm font-medium mb-1">Upload Avatar</label>
+                {profileImagePreview && (
+                  <div className="mb-2">
+                    <img
+                      src={profileImagePreview || "/placeholder.svg"}
+                      alt="Profile preview"
+                      className="w-20 h-20 rounded-full object-cover"
+                    />
+                  </div>
+                )}
+                <input
+                  type="file"
+                  accept="image/*"
+                  name="profileImage"
+                  onChange={handleAvatarChange}
+                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 hover:scale-105"
+                />
+              </div>
               {/* Name */}
               <div>
                 <label className="block text-sm font-medium mb-1">Name</label>
@@ -513,21 +596,6 @@ export default function SubAdminManagementPage() {
                   value={formData.email || ""}
                   onChange={handleFormChange}
                   placeholder="Enter email"
-                />
-              </div>
-
-              {/* Password */}
-              <div>
-                <label className="block text-sm font-medium mb-1">
-                  Password {formMode === "edit" && <span className="text-gray-400">(Leave blank to keep current)</span>}
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  className="w-full border border-gray-600 rounded-md px-3 py-2 bg-gray-700 text-white transition-all duration-300 ease-in-out hover:scale-105"
-                  value={formData.password || ""}
-                  onChange={handleFormChange}
-                  placeholder={formMode === "add" ? "Enter password" : "Enter new password (optional)"}
                 />
               </div>
 
@@ -598,4 +666,6 @@ export default function SubAdminManagementPage() {
     </div>
   )
 }
+
+export default SubAdminManagementPage
 
