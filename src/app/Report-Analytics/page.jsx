@@ -25,7 +25,7 @@ const AnalyticsDashboard = () => {
   useEffect(() => {
     const fetchRevenueData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/revenue")
+        const response = await axios.get("https://api.expengo.com/api/revenue")
         console.log("Revenue Data:", response.data) // Debugging
         setRevenueData(response.data)
       } catch (error) {
@@ -47,7 +47,7 @@ const AnalyticsDashboard = () => {
   useEffect(() => {
     const fetchExpenseData = async () => {
       try {
-        const response = await axios.get("http://localhost:5000/api/admin/getExpense")
+        const response = await axios.get("https://api.expengo.com/api/admin/getExpense")
 
         if (response.data.success && Array.isArray(response.data.data)) {
           const expenses = response.data.data
@@ -255,21 +255,12 @@ const AnalyticsDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-black text-white p-4 md:p-8 animate-fadeIn">
+    <div className="min-h-screen md:ml-60 bg-black text-white p-4 md:p-8 animate-fadeIn">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row mt-8 justify-between items-start md:items-center mb-6 animate-fadeIn">
           <h1 className="text-2xl font-bold animate-fadeIn">Reports & Analytics</h1>
           <div className="flex items-center gap-3 mt-4 md:mt-0 animate-fadeIn">
-            {/* <Button
-              variant="outline"
-              className="h-10 px-4 py-2"
-              onClick={() => alert("Displaying last 30 days' data!")}
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Last 30 Days
-              <ChevronDown className="h-4 w-4 ml-2" />
-            </Button> */}
             <div className="relative">
               <select
                 className="h-10 px-4 py-2 bg-gray-900 border border-gray-700 rounded-md text-white appearance-none pr-8"
@@ -293,17 +284,13 @@ const AnalyticsDashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 animate-fadeIn">
           <Card>
             <CardHeader>
-              <CardTitle className="text-sm text-gray-400">Total Rides</CardTitle>
+              <CardTitle className="text-sm text-gray-400">Total Expenses</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline">
-                <span className="text-3xl font-bold">24,589</span>
+                <span className="text-3xl font-bold">{totalExpense}</span>
               </div>
-              <div className="flex items-center mt-1 text-sm">
-                <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-green-500 font-medium">12.3%</span>
-                <span className="text-gray-400 ml-1">vs last month</span>
-              </div>
+             
               <div className="mt-1">
                 <Car className="h-5 w-5 text-blue-500" />
               </div>
@@ -317,58 +304,13 @@ const AnalyticsDashboard = () => {
             <CardContent>
               <div className="p-4 bg-gray-900 border border-gray-800 rounded-lg">
                 {totalExpense ? (
-                  <p className="text-lg font-medium text-green-500">Total Revenue: ${totalExpense}</p>
+                  <p className="text-lg font-medium text-green-500">Total Revenue: {totalExpense}</p>
                 ) : (
                   <p className="text-gray-400">Loading revenue data...</p>
                 )}
               </div>
 
-              <div className="flex items-center mt-1 text-sm">
-                <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-green-500 font-medium">9.2%</span>
-                <span className="text-gray-400 ml-1">vs last month</span>
-              </div>
-              <div className="mt-1">
-                <DollarSign className="h-5 w-5 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm text-gray-400">Customer Satisfaction</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <span className="text-3xl font-bold">4.8/5.0</span>
-              </div>
-              <div className="flex items-center mt-1 text-sm">
-                <ArrowUp className="h-4 w-4 text-green-500 mr-1" />
-                <span className="text-green-500 font-medium">0.3</span>
-                <span className="text-gray-400 ml-1">vs last month</span>
-              </div>
-              <div className="mt-1">
-                <Star className="h-5 w-5 text-yellow-500" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm text-gray-400">Fleet Utilization</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-baseline">
-                <span className="text-3xl font-bold">85%</span>
-              </div>
-              <div className="flex items-center mt-1 text-sm">
-                <ArrowDown className="h-4 w-4 text-red-500 mr-1" />
-                <span className="text-red-500 font-medium">2.1%</span>
-                <span className="text-gray-400 ml-1">vs last month</span>
-              </div>
-              <div className="mt-1">
-                <Zap className="h-5 w-5 text-purple-500" />
-              </div>
+             
             </CardContent>
           </Card>
         </div>
@@ -498,7 +440,7 @@ const AnalyticsDashboard = () => {
                   {expenseData.length > 0 ? (
                     <div className="space-y-4">
                       <div className="flex items-center justify-between">
-                        <p className="text-lg font-medium text-red-500">Total Expenses: ${totalExpense}</p>
+                        <p className="text-lg font-medium text-red-500">Total Expenses: {totalExpense}</p>
                       </div>
                       <ul className="divide-y divide-gray-700">
                         {expenseData.map((expense, index) => (
@@ -507,7 +449,7 @@ const AnalyticsDashboard = () => {
                               <p className="text-gray-300 font-medium">Cab: {expense.cabNumber}</p>
                               <p className="text-gray-400 text-sm">{expense.category}</p>
                             </div>
-                            <p className="text-red-400 font-semibold">${expense.totalExpense}</p>
+                            <p className="text-red-400 font-semibold">{expense.totalExpense}</p>
                           </li>
                         ))}
                       </ul>

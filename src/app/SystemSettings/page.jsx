@@ -21,17 +21,6 @@ export default function SystemSettingsPage() {
   // For animative message when a setting is changed after logout or in settings
   const [notification, setNotification] = useState("");
 
-  // Super Admin toggles
-  // const [superAdmin, setSuperAdmin] = useState({
-  //   dashboard: true,
-  //   subAdmin: false,
-  //   driverManagement: true,
-  //   cabManagement: false,
-  //   rides: false,
-  //   expenseManagement: false,
-  //   analytics: false,
-  // })
-
   // Sub Admin toggles
   const [subAdmin, setSubAdmin] = useState({
     dashboard: false,
@@ -139,7 +128,7 @@ export default function SystemSettingsPage() {
     const updatePermissions = async () => {
       try {
         const response = await axios.post(
-          "http://localhost:5000/api/subAdminPermissions/sub-admin",
+          "https://api.expengo.com/api/subAdminPermissions/sub-admin",
           {
             subAdminId: subDetail._id,
             name: subDetail.name,
@@ -163,10 +152,8 @@ export default function SystemSettingsPage() {
     updatePermissions();
   }, [subAdmin]); // ✅ Runs only when `subAdmin` state changes
 
-  // console.log(subAdmin);
-  // console.log(localStorage.getItem("selectedSubAdmin"));
   return (
-    <div className="min-h-screen h-full bg-gray-900 text-white p-6 relative overflow-hidden">
+    <div className="min-h-screen md:ml-60 h-full bg-gray-900 text-white p-6 relative overflow-hidden">
       {/* Back button to return to sub-admin management */}
       {selectedSubAdmin && (
         <button
@@ -299,33 +286,6 @@ export default function SystemSettingsPage() {
                 </div>
               </div>
             )}
-
-            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-6"> */}
-            {/* Master Admin Section */}
-            {/* <div className="flip-360 bg-gray-800 p-6 rounded-md shadow-2xl transform transition-all duration-1500">
-                <h2 className="text-2xl font-semibold mb-4 border-b border-gray-700 pb-2 text-center">Master Admin</h2>
-                <div className="space-y-2">
-                  {renderToggle("Dashboard", superAdmin.dashboard, (val) =>
-                    setSuperAdmin({ ...superAdmin, dashboard: val }),
-                  )}
-                  {renderToggle("Sub Admin", superAdmin.subAdmin, (val) =>
-                    setSuperAdmin({ ...superAdmin, subAdmin: val }),
-                  )}
-                  {renderToggle("Driver Management", superAdmin.driverManagement, (val) =>
-                    setSuperAdmin({ ...superAdmin, driverManagement: val }),
-                  )}
-                  {renderToggle("Cab Management", superAdmin.cabManagement, (val) =>
-                    setSuperAdmin({ ...superAdmin, cabManagement: val }),
-                  )}
-                  {renderToggle("Rides", superAdmin.rides, (val) => setSuperAdmin({ ...superAdmin, rides: val }))}
-                  {renderToggle("Expense Management", superAdmin.expenseManagement, (val) =>
-                    setSuperAdmin({ ...superAdmin, expenseManagement: val }),
-                  )}
-                  {renderToggle("Analytics", superAdmin.analytics, (val) =>
-                    setSuperAdmin({ ...superAdmin, analytics: val }),
-                  )}
-                </div>
-              </div> */}
 
             {/* Sub Admin Section */}
             <div className="flip-360 bg-gray-800 p-6 rounded-md shadow-2xl transform transition-all duration-1500">

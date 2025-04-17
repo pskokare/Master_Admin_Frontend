@@ -7,7 +7,7 @@ import axios from "axios";
 
 export default function AuthPage() {
   const router = useRouter();
-  const [view, setView] = useState("login"); // "login" | "register" | "forgot"
+  const [view, setView] = useState("login");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -51,7 +51,7 @@ export default function AuthPage() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/master/login-master-admin",
+        "https://api.expengo.com/api/master/login-master-admin",
         loginForm
       );
       console.log("Login Response:", response.data);
@@ -64,7 +64,7 @@ export default function AuthPage() {
       
       // Navigate to Dashboard on success
       setSuccess("Login successful!");
-      router.push("/Dashboard"); // Redirect to dashboard
+      router.push("/Dashboard"); 
     } catch (error) {
       setError(
         error.response?.data?.message || "Login failed. Please try again."
@@ -84,7 +84,7 @@ export default function AuthPage() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/master/register-master-admin",
+        "https://api.expengo.com/api/master/register-master-admin",
         {
           name: registerForm.name,
           email: registerForm.email,
@@ -94,7 +94,7 @@ export default function AuthPage() {
 
       console.log("Register Response:", response);
       setSuccess("Registration successful! Please login.");
-      setView("login"); // Switch to login view
+      setView("login"); 
     } catch (error) {
       setError(
         error.response?.data?.message ||
@@ -111,7 +111,7 @@ export default function AuthPage() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/forgot-password",
+        "https://api.expengo.com/api/forgot-password",
         { email: loginForm.email }
       );
 
@@ -178,12 +178,6 @@ export default function AuthPage() {
           </form>
 
           <div className="mt-4 text-center">
-            {/* <span
-              onClick={() => setView("forgot")}
-              className="text-sm text-indigo-400 hover:underline cursor-pointer"
-            >
-              Forgot Password?
-            </span> */}
             <br />
             <span
               onClick={() => setView("register")}

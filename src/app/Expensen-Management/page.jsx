@@ -1,8 +1,19 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { FileText, FileSpreadsheet, Trash, Pencil } from "lucide-react"
-import { PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
+import { Check, X, FileSpreadsheet, Trash, Pencil } from "lucide-react"
+import {
+  PieChart,
+  Pie,
+  BarChart as RechartsBarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  Legend,
+  Cell,
+} from "recharts"
 // import jsPDF from "jspdf"
 // import "jspdf-autotable"
 import { saveAs } from "file-saver"
@@ -26,7 +37,7 @@ export default function ExpenseDashboard() {
   const [cabExpenses, setCabExpenses] = useState([])
 
   // API base URL - you can change this to match your environment
-  const API_BASE_URL = "http://localhost:5000/api/admin/getExpense"
+  const API_BASE_URL = "https://api.expengo.com/api/admin/getExpense"
 
   // Fetch expenses from the backend API
   useEffect(() => {
@@ -75,7 +86,7 @@ export default function ExpenseDashboard() {
         },
       },
       {
-        cabNumber: "MH120000",
+        cabNumber: "MH12X333", // Changed from MH120000 to make it more consistent
         totalExpense: 3180,
         breakdown: {
           fuel: 1700,
@@ -245,74 +256,6 @@ export default function ExpenseDashboard() {
     return null
   }
 
-  // const exportToPDF = () => {
-  //   // Create a new jsPDF instance
-  //   const doc = new jsPDF()
-
-  //   // Set document properties
-  //   doc.setProperties({
-  //     title: "Cab Expenses Report",
-  //     author: "Expense Dashboard",
-  //     subject: "Cab Expenses",
-  //     keywords: "cab, expenses, report",
-  //   })
-
-  //   // Add title
-  //   doc.setFontSize(18)
-  //   doc.text("Cab Expenses Report", 14, 22)
-
-  //   // Add date
-  //   doc.setFontSize(11)
-  //   doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 30)
-
-  //   // Add expense breakdown section
-  //   doc.setFontSize(14)
-  //   doc.text("Expense Breakdown", 14, 45)
-
-  //   // Create breakdown table data
-  //   const breakdownTableData = expenseBreakdown.map((item) => [item.type, `₹${item.amount}`, `${item.percentage}%`])
-
-  //   // Add breakdown table
-  //   doc.autoTable({
-  //     startY: 50,
-  //     head: [["Category", "Amount", "Percentage"]],
-  //     body: breakdownTableData,
-  //     theme: "grid",
-  //     headStyles: { fillColor: [66, 66, 66] },
-  //     margin: { top: 50 },
-  //   })
-
-  //   // Get the final Y position after the first table
-  //   const finalY = (doc.lastAutoTable?.finalY || 50) + 15
-
-  //   // Add cab expenses section
-  //   doc.setFontSize(14)
-  //   doc.text("Cab Expense Details", 14, finalY)
-
-  //   // Create expense table data
-  //   const expenseTableData = expenses.map((expense) => [
-  //     expense.cabNumber,
-  //     `₹${expense.totalExpense}`,
-  //     `₹${expense.breakdown.fuel}`,
-  //     `₹${expense.breakdown.fastTag}`,
-  //     `₹${expense.breakdown.tyrePuncture}`,
-  //     `₹${expense.breakdown.otherProblems}`,
-  //   ])
-
-  //   // Add expense table
-  //   doc.autoTable({
-  //     startY: finalY + 5,
-  //     head: [["Cab Number", "Total", "Fuel", "FastTag", "Tyre Puncture", "Other Problems"]],
-  //     body: expenseTableData,
-  //     theme: "grid",
-  //     headStyles: { fillColor: [66, 66, 66] },
-  //     margin: { top: finalY + 5 },
-  //   })
-
-  //   // Save the PDF
-  //   doc.save("cab-expenses-report.pdf")
-  // }
-
   const exportToCSV = () => {
     // Prepare CSV data
     const headers = ["Cab Number", "Total Expense", "Fuel", "FastTag", "Tyre Puncture", "Other Problems"]
@@ -337,232 +280,369 @@ export default function ExpenseDashboard() {
     saveAs(blob, "cab-expenses.csv")
   }
 
+  // Custom BarChart component to avoid CartesianGrid import issues
+  const BarChart = ({ cabExpenses }) => {
+    return (
+      <ResponsiveContainer width="100%" height="100%">
+        <RechartsBarChart data={cabExpenses}>
+          <Tooltip content={CustomBarTooltip} />
+          <Legend />
+          {/* Add proper axes */}
+          <XAxis dataKey="name" axisLine={false} tickLine={false} />
+          <YAxis axisLine={false} tickLine={false} />
+          {/* Use the Bar component correctly */}
+          <Bar dataKey="amount" fill="#4285F4" radius={[4, 4, 0, 0]} />
+        </RechartsBarChart>
+      </ResponsiveContainer>
+    )
+  }
+
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="container mx-auto px-4 py-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-          <h1 className="text-2xl font-bold mt-6">Cab Expenses Dashboard</h1>
-          <div className="flex gap-2 mt-4 md:mt-8">
-            {/* <button
-              onClick={exportToPDF}
-              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center gap-2"
-            >
-              <FileText className="h-5 w-5" />
-              Export PDF
-            </button> */}
-            <button
-              onClick={exportToCSV}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center gap-2"
-            >
-              <FileSpreadsheet className="h-5 w-5" />
-              Export CSV
-            </button>
-          </div>
+    <div className="min-h-screen bg-gray-950 text-white md:ml-60">
+      {/* Main container with improved mobile padding */}
+      <div className="p-2 md:p-6">
+        {/* Header Section - Fully stacked on mobile */}
+        <div className="mb-4 md:mb-8">
+          <h1 className="text-xl md:text-2xl font-bold mb-3">Cab Expenses Dashboard</h1>
+          <button
+            onClick={exportToCSV}
+            className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded flex items-center justify-center gap-2 w-full md:w-auto"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+            <span>Export CSV</span>
+          </button>
         </div>
 
         {/* Error message */}
         {error && (
-          <div className="bg-red-500 text-white p-4 rounded-lg mb-6">
+          <div className="bg-red-500 text-white p-3 rounded-lg mb-4 text-sm">
             <p className="font-medium">{error}</p>
             <button
               onClick={fetchExpenses}
-              className="mt-2 bg-white text-red-500 px-4 py-1 rounded text-sm font-medium"
+              className="mt-2 bg-white text-red-500 px-3 py-1 rounded text-xs font-medium"
             >
               Retry
             </button>
           </div>
         )}
 
-        {/* Charts Section */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Pie Chart */}
-          <div className="bg-gray-900 rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Expense Breakdown</h2>
-            <div className="h-64">
-              {loading ? (
-                <div className="flex justify-center items-center h-full">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={expenseBreakdown}
-                      dataKey="amount"
-                      nameKey="type"
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={80}
-                      paddingAngle={0}
-                      label={({ type, percentage }) => `${type} (${percentage}%)`}
-                      labelLine={false}
-                    />
-                    <Tooltip content={<CustomPieTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-            <div className="grid grid-cols-2 gap-2 mt-6">
-              {expenseBreakdown.map((item) => (
-                <div key={item.type} className="flex items-center gap-2">
-                  <div className="h-4 w-4 rounded-sm" style={{ backgroundColor: item.fill }}></div>
-                  <span>
-                    {item.type} ({item.percentage}%)
-                  </span>
-                </div>
-              ))}
-            </div>
+        {/* Loading indicator - Centered if everything is loading */}
+        {loading && (
+          <div className="flex justify-center items-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
           </div>
+        )}
 
-          {/* Bar Chart */}
-          <div className="bg-gray-900 rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Cab Expense Distribution</h2>
-            <div className="h-64">
-              {loading ? (
-                <div className="flex justify-center items-center h-full">
-                  <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+        {/* Main content - Only show when not loading */}
+        {!loading && (
+          <>
+            {/* Charts Section - Single column always */}
+            <div className="space-y-4 mb-6">
+              {/* Pie Chart - Optimized height */}
+              <div className="bg-gray-900 rounded-lg p-4">
+                <h2 className="text-lg font-semibold mb-3">Expense Breakdown</h2>
+                <div className="h-64 max-h-64">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={expenseBreakdown}
+                        dataKey="amount"
+                        nameKey="type"
+                        cx="50%"
+                        cy="50%"
+                        innerRadius={40}
+                        outerRadius={65}
+                        paddingAngle={1}
+                        label={false}
+                      >
+                        {expenseBreakdown.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.fill} />
+                        ))}
+                      </Pie>
+                      <Tooltip content={<CustomPieTooltip />} />
+                      <Legend
+                        layout="horizontal"
+                        verticalAlign="bottom"
+                        align="center"
+                        formatter={(value, entry) => {
+                          const item = expenseBreakdown.find((i) => i.type === value)
+                          return `${value} (${item?.percentage}%)`
+                        }}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </div>
-              ) : (
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={cabExpenses}>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#444" />
-                    <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                    <YAxis axisLine={false} tickLine={false} />
-                    <Tooltip content={<CustomBarTooltip />} />
-                    <Bar dataKey="amount" fill="#4285F4" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              )}
-            </div>
-          </div>
-        </div>
+              </div>
 
-        {/* Expense Logs Section */}
-        <div className="bg-gray-900 rounded-lg p-6">
-          <h2 className="text-lg font-semibold mb-4">Cab Expense Details</h2>
-
-          {loading ? (
-            <div className="flex justify-center items-center py-10">
-              <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-500"></div>
+              {/* Bar Chart - Server-safe responsive behavior */}
+              <div className="bg-gray-900 rounded-lg p-4">
+                <h2 className="text-lg font-semibold mb-3">Cab Expense Distribution</h2>
+                <div className="h-60 md:h-64">
+                  <BarChart cabExpenses={cabExpenses} />
+                </div>
+              </div>
             </div>
-          ) : (
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-gray-800">
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Cab Number</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Total Expense</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Fuel</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">FastTag</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Tyre Puncture</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Other Problems</th>
-                  <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+
+            {/* Expense Logs Section */}
+            <div className="bg-gray-900 rounded-lg">
+              {/* Table header with filter/search option */}
+              <div className="p-4 border-b border-gray-800">
+                <h2 className="text-lg font-semibold mb-2">Cab Expense Details</h2>
+                {/* We could add search/filter here in the future */}
+              </div>
+
+              {/* Mobile Card View (always shown on mobile, hidden on larger screens) */}
+              <div className="block md:hidden">
                 {expenses.length > 0 ? (
-                  expenses.map((expense) => (
-                    <tr key={expense.cabNumber} className="border-b border-gray-800">
-                      {editingExpense === expense.cabNumber ? (
-                        <>
-                          <td className="py-4 px-4">
-                            <input
-                              className="bg-gray-700 px-2 py-1 rounded w-full"
-                              name="cabNumber"
-                              value={editForm.cabNumber}
-                              onChange={handleEditChange}
-                            />
-                          </td>
-                          <td className="py-4 px-4">
-                            <input
-                              className="bg-gray-700 px-2 py-1 rounded w-full"
-                              name="totalExpense"
-                              type="number"
-                              value={editForm.totalExpense}
-                              onChange={handleEditChange}
-                              disabled
-                            />
-                          </td>
-                          <td className="py-4 px-4">
-                            <input
-                              className="bg-gray-700 px-2 py-1 rounded w-full"
-                              name="fuel"
-                              type="number"
-                              value={editForm.breakdown.fuel}
-                              onChange={handleEditChange}
-                            />
-                          </td>
-                          <td className="py-4 px-4">
-                            <input
-                              className="bg-gray-700 px-2 py-1 rounded w-full"
-                              name="fastTag"
-                              type="number"
-                              value={editForm.breakdown.fastTag}
-                              onChange={handleEditChange}
-                            />
-                          </td>
-                          <td className="py-4 px-4">
-                            <input
-                              className="bg-gray-700 px-2 py-1 rounded w-full"
-                              name="tyrePuncture"
-                              type="number"
-                              value={editForm.breakdown.tyrePuncture}
-                              onChange={handleEditChange}
-                            />
-                          </td>
-                          <td className="py-4 px-4">
-                            <input
-                              className="bg-gray-700 px-2 py-1 rounded w-full"
-                              name="otherProblems"
-                              type="number"
-                              value={editForm.breakdown.otherProblems}
-                              onChange={handleEditChange}
-                            />
-                          </td>
-                          <td className="py-4 px-4 flex gap-2">
-                            <button onClick={saveEditExpense} className="text-green-500 hover:text-green-400">
-                              ✅ Save
-                            </button>
-                            <button onClick={cancelEdit} className="text-red-500 hover:text-red-400">
-                              ❌ Cancel
-                            </button>
-                          </td>
-                        </>
-                      ) : (
-                        <>
-                          <td className="py-4 px-4">{expense.cabNumber}</td>
-                          <td className="py-4 px-4">₹{expense.totalExpense}</td>
-                          <td className="py-4 px-4">₹{expense.breakdown.fuel}</td>
-                          <td className="py-4 px-4">₹{expense.breakdown.fastTag}</td>
-                          <td className="py-4 px-4">₹{expense.breakdown.tyrePuncture}</td>
-                          <td className="py-4 px-4">₹{expense.breakdown.otherProblems}</td>
-                          <td className="py-4 px-4 flex gap-2">
-                            <button onClick={() => startEditing(expense)} className="text-blue-500 hover:text-blue-400">
-                              <Pencil className="h-5 w-5" />
-                            </button>
-                            <button
-                              onClick={() => deleteExpense(expense.cabNumber)}
-                              className="text-red-500 hover:text-red-400"
-                            >
-                              <Trash className="h-5 w-5" />
-                            </button>
-                          </td>
-                        </>
-                      )}
-                    </tr>
-                  ))
+                  <div className="divide-y divide-gray-800">
+                    {expenses.map((expense) => (
+                      <div key={expense.cabNumber} className="p-3">
+                        {editingExpense === expense.cabNumber ? (
+                          // Edit form for mobile
+                          <div className="space-y-2">
+                            <div className="flex items-center">
+                              <span className="w-1/3 text-gray-400 text-xs">Cab No:</span>
+                              <input
+                                className="bg-gray-700 px-2 py-1 rounded w-2/3 text-sm"
+                                name="cabNumber"
+                                value={editForm.cabNumber}
+                                onChange={handleEditChange}
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <span className="w-1/3 text-gray-400 text-xs">Fuel:</span>
+                              <input
+                                className="bg-gray-700 px-2 py-1 rounded w-2/3 text-sm"
+                                name="fuel"
+                                type="number"
+                                value={editForm.breakdown.fuel}
+                                onChange={handleEditChange}
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <span className="w-1/3 text-gray-400 text-xs">FastTag:</span>
+                              <input
+                                className="bg-gray-700 px-2 py-1 rounded w-2/3 text-sm"
+                                name="fastTag"
+                                type="number"
+                                value={editForm.breakdown.fastTag}
+                                onChange={handleEditChange}
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <span className="w-1/3 text-gray-400 text-xs">Tyre:</span>
+                              <input
+                                className="bg-gray-700 px-2 py-1 rounded w-2/3 text-sm"
+                                name="tyrePuncture"
+                                type="number"
+                                value={editForm.breakdown.tyrePuncture}
+                                onChange={handleEditChange}
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <span className="w-1/3 text-gray-400 text-xs">Other:</span>
+                              <input
+                                className="bg-gray-700 px-2 py-1 rounded w-2/3 text-sm"
+                                name="otherProblems"
+                                type="number"
+                                value={editForm.breakdown.otherProblems}
+                                onChange={handleEditChange}
+                              />
+                            </div>
+                            <div className="flex items-center">
+                              <span className="w-1/3 text-gray-400 text-xs">Total:</span>
+                              <input
+                                className="bg-gray-700 px-2 py-1 rounded w-2/3 text-sm"
+                                name="totalExpense"
+                                type="number"
+                                value={editForm.totalExpense}
+                                onChange={handleEditChange}
+                                disabled
+                              />
+                            </div>
+                            <div className="flex justify-end space-x-2 pt-2">
+                              <button
+                                onClick={saveEditExpense}
+                                className="bg-green-600 text-white px-3 py-1 rounded text-sm"
+                              >
+                                Save
+                              </button>
+                              <button onClick={cancelEdit} className="bg-red-600 text-white px-3 py-1 rounded text-sm">
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          // View mode for mobile
+                          <div>
+                            <div className="flex justify-between items-center mb-2">
+                              <span className="font-medium">Cab #{expense.cabNumber}</span>
+                              <span className="font-bold text-lg">₹{expense.totalExpense}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-1 text-xs">
+                              <div className="flex items-center">
+                                <span className="text-gray-400 mr-1">Fuel:</span>
+                                <span>₹{expense.breakdown.fuel}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <span className="text-gray-400 mr-1">FastTag:</span>
+                                <span>₹{expense.breakdown.fastTag}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <span className="text-gray-400 mr-1">Tyre:</span>
+                                <span>₹{expense.breakdown.tyrePuncture}</span>
+                              </div>
+                              <div className="flex items-center">
+                                <span className="text-gray-400 mr-1">Other:</span>
+                                <span>₹{expense.breakdown.otherProblems}</span>
+                              </div>
+                            </div>
+                            <div className="flex justify-end space-x-2 mt-2">
+                              <button
+                                onClick={() => startEditing(expense)}
+                                className="text-blue-500 hover:text-blue-400 p-1"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </button>
+                              <button
+                                onClick={() => deleteExpense(expense.cabNumber)}
+                                className="text-red-500 hover:text-red-400 p-1"
+                              >
+                                <Trash className="h-4 w-4" />
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                 ) : (
-                  <tr>
-                    <td colSpan={7} className="text-center py-4">
-                      No expenses found
-                    </td>
-                  </tr>
+                  <div className="p-4 text-center text-sm">No expenses found</div>
                 )}
-              </tbody>
-            </table>
-          )}
-        </div>
+              </div>
+
+              {/* Table View (hidden on mobile, shown on md and larger) */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-gray-800">
+                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Cab No.</th>
+                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Total</th>
+                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Fuel</th>
+                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">FastTag</th>
+                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Tyre</th>
+                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Other</th>
+                      <th className="py-3 px-4 text-left text-xs font-medium text-gray-400 uppercase">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {expenses.length > 0 ? (
+                      expenses.map((expense) => (
+                        <tr key={expense.cabNumber} className="border-b border-gray-800">
+                          {editingExpense === expense.cabNumber ? (
+                            <>
+                              <td className="py-3 px-4">
+                                <input
+                                  className="bg-gray-700 px-2 py-1 rounded w-full text-sm"
+                                  name="cabNumber"
+                                  value={editForm.cabNumber}
+                                  onChange={handleEditChange}
+                                />
+                              </td>
+                              <td className="py-3 px-4">
+                                <input
+                                  className="bg-gray-700 px-2 py-1 rounded w-full text-sm"
+                                  name="totalExpense"
+                                  type="number"
+                                  value={editForm.totalExpense}
+                                  onChange={handleEditChange}
+                                  disabled
+                                />
+                              </td>
+                              <td className="py-3 px-4">
+                                <input
+                                  className="bg-gray-700 px-2 py-1 rounded w-full text-sm"
+                                  name="fuel"
+                                  type="number"
+                                  value={editForm.breakdown.fuel}
+                                  onChange={handleEditChange}
+                                />
+                              </td>
+                              <td className="py-3 px-4">
+                                <input
+                                  className="bg-gray-700 px-2 py-1 rounded w-full text-sm"
+                                  name="fastTag"
+                                  type="number"
+                                  value={editForm.breakdown.fastTag}
+                                  onChange={handleEditChange}
+                                />
+                              </td>
+                              <td className="py-3 px-4">
+                                <input
+                                  className="bg-gray-700 px-2 py-1 rounded w-full text-sm"
+                                  name="tyrePuncture"
+                                  type="number"
+                                  value={editForm.breakdown.tyrePuncture}
+                                  onChange={handleEditChange}
+                                />
+                              </td>
+                              <td className="py-3 px-4">
+                                <input
+                                  className="bg-gray-700 px-2 py-1 rounded w-full text-sm"
+                                  name="otherProblems"
+                                  type="number"
+                                  value={editForm.breakdown.otherProblems}
+                                  onChange={handleEditChange}
+                                />
+                              </td>
+                              <td className="py-3 px-4 flex gap-2">
+                                <button onClick={saveEditExpense} className="text-green-500 hover:text-green-400">
+                                  <Check className="h-5 w-5" />
+                                </button>
+                                <button onClick={cancelEdit} className="text-red-500 hover:text-red-400">
+                                  <X className="h-5 w-5" />
+                                </button>
+                              </td>
+                            </>
+                          ) : (
+                            <>
+                              <td className="py-3 px-4 text-sm">{expense.cabNumber}</td>
+                              <td className="py-3 px-4 text-sm font-medium">₹{expense.totalExpense}</td>
+                              <td className="py-3 px-4 text-sm">₹{expense.breakdown.fuel}</td>
+                              <td className="py-3 px-4 text-sm">₹{expense.breakdown.fastTag}</td>
+                              <td className="py-3 px-4 text-sm">₹{expense.breakdown.tyrePuncture}</td>
+                              <td className="py-3 px-4 text-sm">₹{expense.breakdown.otherProblems}</td>
+                              <td className="py-3 px-4 flex gap-2">
+                                <button
+                                  onClick={() => startEditing(expense)}
+                                  className="text-blue-500 hover:text-blue-400"
+                                >
+                                  <Pencil className="h-5 w-5" />
+                                </button>
+                                <button
+                                  onClick={() => deleteExpense(expense.cabNumber)}
+                                  className="text-red-500 hover:text-red-400"
+                                >
+                                  <Trash className="h-5 w-5" />
+                                </button>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="text-center py-6 text-sm">
+                          No expenses found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   )
