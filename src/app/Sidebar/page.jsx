@@ -85,11 +85,11 @@ export default function Sidebar() {
       icon: <ClipboardList size={20} />,
       route: "../Expensen-Management",
     },
-    {
-      name: "System Settings",
-      icon: <Settings size={20} />,
-      route: "../SystemSettings",
-    },
+    // {
+    //   name: "System Settings",
+    //   icon: <Settings size={20} />,
+    //   route: "../SystemSettings",
+    // },
     {
       name: "Analytics",
       icon: <BarChart size={20} />,

@@ -395,8 +395,8 @@ export default function ExpenseDashboard() {
               <div className="block md:hidden">
                 {expenses.length > 0 ? (
                   <div className="divide-y divide-gray-800">
-                    {expenses.map((expense) => (
-                      <div key={expense.cabNumber} className="p-3">
+                    {expenses.map((expense,index) => (
+                      <div key={index} className="p-3">
                         {editingExpense === expense.cabNumber ? (
                           // Edit form for mobile
                           <div className="space-y-2">
@@ -537,8 +537,8 @@ export default function ExpenseDashboard() {
                   </thead>
                   <tbody>
                     {expenses.length > 0 ? (
-                      expenses.map((expense) => (
-                        <tr key={expense.cabNumber} className="border-b border-gray-800">
+                      expenses.map((expense,index) => (
+                        <tr key={index} className="border-b border-gray-800">
                           {editingExpense === expense.cabNumber ? (
                             <>
                               <td className="py-3 px-4">

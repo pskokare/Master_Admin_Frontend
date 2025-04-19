@@ -1,7 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { ClientSidebar } from "./client-components";
-import { SubAdminProvider } from "../context/sub-admin-context"
+import { SubAdminProvider } from "../context/sub-admin-context";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,9 +13,13 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+// ✅ Add favicon to metadata
 export const metadata = {
-  title: "Master Admin Panel",
-  description: "Admin dashboard for cab management system",
+  title: "Cab Expengo",
+  description: "Cab management dashboard",
+  icons: {
+    icon: "/favicon.ico", // 👈 this should match your favicon file in /public
+  },
 };
 
 export default function RootLayout({ children }) {

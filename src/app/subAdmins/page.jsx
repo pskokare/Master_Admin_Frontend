@@ -528,7 +528,7 @@ const SubAdminManagementPage = () => {
                   <th className="p-2 sm:p-3 text-sm">Status</th>
                   <th className="p-2 sm:p-3 text-sm">Actions</th>
                   <th className="p-2 sm:p-3 text-sm">Block/Unblock</th>
-                  <th className="p-2 sm:p-3 text-sm">Settings</th>
+                  {/* <th className="p-2 sm:p-3 text-sm">Settings</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -578,7 +578,7 @@ const SubAdminManagementPage = () => {
                         {subAdmin.status === "Active" ? "Block" : "Unblock"}
                       </button>
                     </td>
-                    <td className="p-2 sm:p-3">
+                    {/* <td className="p-2 sm:p-3">
                       <button
                         onClick={() => handleOpenSettings(subAdmin)}
                         className="px-2 py-1 text-xs rounded-md bg-blue-600 hover:bg-blue-700 flex items-center gap-1"
@@ -586,7 +586,7 @@ const SubAdminManagementPage = () => {
                         <Settings size={12} />
                         Settings
                       </button>
-                    </td>
+                    </td> */}
                   </motion.tr>
                 ))}
                 {currentSubAdmins.length === 0 && (
