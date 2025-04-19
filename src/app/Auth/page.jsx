@@ -1,286 +1,494 @@
-"use client";
 
-import React, { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/navigation";
-import axios from "axios";
 
-export default function AuthPage() {
-  const router = useRouter();
-  const [view, setView] = useState("login");
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+"use client"
+import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
+import { ToastContainer, toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
+import axios from "axios"
+import { motion, AnimatePresence } from "framer-motion"
+import { Eye, EyeOff, X, Car } from "lucide-react"
 
-  // Form States
-  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
-  const [registerForm, setRegisterForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirm: "",
-  });
+const AuthPage = () => {
+  const [timer, setTimer] = useState(120)
+  const [isTimerRunning, setIsTimerRunning] = useState(false)
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [showForgotModal, setShowForgotModal] = useState(false)
+  const [forgotEmail, setForgotEmail] = useState("")
+  const [forgotLoading, setForgotLoading] = useState(false)
+  const [showOtpModal, setShowOtpModal] = useState(false)
+  const [otp, setOtp] = useState("")
+  const [otpLoading, setOtpLoading] = useState(false)
+  const [showResetModal, setShowResetModal] = useState(false)
+  const [newPassword, setNewPassword] = useState("")
+  const [confirmPassword, setConfirmPassword] = useState("")
+  const [resetLoading, setResetLoading] = useState(false)
+
+  const router = useRouter()
+
+  // Animation variants
+  const cardVariants = {
+    initial: { opacity: 0, y: 20, scale: 0.95 },
+    animate: { opacity: 1, y: 0, scale: 1 },
+    exit: { opacity: 0, y: -20, scale: 0.95 },
+  }
+
+  // All your existing handlers remain the same
+  const handleLogin = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const res = await axios.post("http://localhost:5000/api/master/login-master-admin", {
+        email,
+        password,
+      })
+
+      if (res.status === 200) {
+        toast.success(res.data.message)
+        localStorage.setItem("token", res.data.token)
+        localStorage.setItem("id", res.data.id)
+        localStorage.setItem("isLoggedIn", "true")
+        router.push("/Dashboard")
+      }
+    } catch (error) {
+      toast.error("Invalid credentials or something went wrong.")
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const toggleForgotPassword = () => {
+    setShowForgotModal(!showForgotModal)
+    setForgotEmail(email)
+  }
 
   useEffect(() => {
-    console.log("Current view:", view);
-  }, [view]);
+    let interval;
+    if (showForgotModal || showOtpModal) {
+      setTimer(120);
+      setIsTimerRunning(true);
+      interval = setInterval(() => {
+        setTimer((prev) => {
+          if (prev <= 1) {
+            clearInterval(interval);
+            setIsTimerRunning(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(interval);
+  }, [showForgotModal, showOtpModal]);
 
-  // Animation Variants
-  const variants = {
-    login: {
-      initial: { opacity: 0, rotateY: -90 },
-      animate: { opacity: 1, rotateY: 0 },
-      exit: { opacity: 0, rotateY: 90 },
-    },
-    register: {
-      initial: { opacity: 0, rotateY: 90 },
-      animate: { opacity: 1, rotateY: 0 },
-      exit: { opacity: 0, rotateY: -90 },
-    },
-    forgot: {
-      initial: { opacity: 0, rotateY: 90 },
-      animate: { opacity: 1, rotateY: 0 },
-      exit: { opacity: 0, rotateY: -90 },
-    },
-  };
-
-  // Handle Login API Call (Master Admin)
-  const handleLogin = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  const handleSendOTP = async (e) => {
+    e.preventDefault()
+    setForgotLoading(true)
 
     try {
-      const response = await axios.post(
-        "https://api.expengo.com/api/master/login-master-admin",
-        loginForm
-      );
-      console.log("Login Response:", response.data);
+      const res = await axios.post("http://localhost:5000/api/master/send-otp", {
+        email: forgotEmail,
+      })
 
-      // Store authentication state
-      localStorage.setItem("isLoggedIn", "true");
-      if (response.data.token) {
-        localStorage.setItem("authToken", response.data.token);
+      if (res.status === 200) {
+        toast.success(res.data.message)
+        localStorage.setItem("email", forgotEmail)
+        setShowForgotModal(false)
+        setShowOtpModal(true)
+        setTimer(120)
+        setIsTimerRunning(true)
       }
-      
-      // Navigate to Dashboard on success
-      setSuccess("Login successful!");
-      router.push("/Dashboard"); 
     } catch (error) {
-      setError(
-        error.response?.data?.message || "Login failed. Please try again."
-      );
+      toast.error(error.response?.data?.message || "Failed to send OTP. Please try again.")
+    } finally {
+      setForgotLoading(false)
     }
-  };
-  // Handle Register API Call (Master Admin)
-  const handleRegister = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  }
 
-    if (registerForm.password !== registerForm.confirm) {
-      setError("Passwords do not match.");
-      return;
-    }
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault()
+    setOtpLoading(true)
 
     try {
-      const response = await axios.post(
-        "https://api.expengo.com/api/master/register-master-admin",
-        {
-          name: registerForm.name,
-          email: registerForm.email,
-          password: registerForm.password,
-        }
-      );
+      const email = localStorage.getItem("email")
+      if (!email) {
+        toast.error("Email not found. Please try again from the beginning.")
+        setShowOtpModal(false)
+        setShowForgotModal(true)
+        return
+      }
 
-      console.log("Register Response:", response);
-      setSuccess("Registration successful! Please login.");
-      setView("login"); 
+      const res = await axios.post("http://localhost:5000/api/master/verify-otp", {
+        email,
+        otp,
+      })
+
+      if (res.status === 200) {
+        toast.success("OTP Verified! Reset your password.")
+        setShowOtpModal(false)
+        setShowResetModal(true)
+      }
     } catch (error) {
-      setError(
-        error.response?.data?.message ||
-          "Registration failed. Please try again."
-      );
+      toast.error(error.response?.data?.message || "Invalid OTP. Please try again.")
+    } finally {
+      setOtpLoading(false)
     }
-  };
+  }
 
-  // Handle Forgot Password API Call
-  const handleForgot = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSuccess("");
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+
+    if (newPassword !== confirmPassword) {
+      toast.error("Passwords do not match")
+      return
+    }
+
+    setResetLoading(true)
 
     try {
-      const response = await axios.post(
-        "https://api.expengo.com/api/forgot-password",
-        { email: loginForm.email }
-      );
+      const email = localStorage.getItem("email")
+      if (!email) {
+        toast.error("Session expired. Please try again from the beginning.")
+        setShowResetModal(false)
+        setShowForgotModal(true)
+        return
+      }
 
-      console.log("Forgot Password Response:", response.data);
-      setSuccess("Password reset link sent to your email.");
+      const res = await axios.post("http://localhost:5000/api/master/reset-password", {
+        email,
+        password: newPassword,
+      })
+
+      if (res.status === 200) {
+        toast.success("Password Reset Successful!")
+        localStorage.removeItem("email")
+        setShowResetModal(false)
+        setNewPassword("")
+        setConfirmPassword("")
+        setOtp("")
+      }
     } catch (error) {
-      setError(error.response?.data?.message || "Failed to send reset link.");
+      toast.error(error.response?.data?.message || "Failed to reset password. Try again.")
+    } finally {
+      setResetLoading(false)
     }
-  };
+  }
 
-  // Render Forms Based on View
-  const renderContent = () => {
-    if (view === "login") {
-      return (
-        <motion.div
-          key="login"
-          className="absolute inset-0 bg-gray-900 text-white p-6 rounded-2xl shadow-2xl border border-gray-700"
-          initial={variants.login.initial}
-          animate={variants.login.animate}
-          exit={variants.login.exit}
-          transition={{ duration: 0.8 }}
-        >
-          <h2 className="text-3xl font-bold text-center mb-6">Login</h2>
-          {error && (
-            <div className="text-center text-red-500 font-medium mb-4">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="text-center text-green-500 font-medium mb-4">
-              {success}
-            </div>
-          )}
+  const modalWrapper = (modalContent, key) => (
+    <motion.div
+      key={key}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 flex justify-center items-center z-50 bg-black/60 backdrop-blur-sm"
+    >
+      {modalContent}
+    </motion.div>
+  )
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <motion.input
-              type="email"
-              placeholder="Email"
-              className="w-full bg-gray-800 text-white rounded px-4 py-2 border border-gray-600"
-              value={loginForm.email}
-              onChange={(e) =>
-                setLoginForm({ ...loginForm, email: e.target.value })
-              }
-              required
-            />
-
-            <motion.input
-              type="password"
-              placeholder="Password"
-              className="w-full bg-gray-800 text-white rounded px-4 py-2 border border-gray-600"
-              value={loginForm.password}
-              onChange={(e) =>
-                setLoginForm({ ...loginForm, password: e.target.value })
-              }
-              required
-            />
-
-            <motion.button
-              type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-semibold"
-            >
-              Login
-            </motion.button>
-          </form>
-
-          <div className="mt-4 text-center">
-            <br />
-            <span
-              onClick={() => setView("register")}
-              className="text-sm text-indigo-400 hover:underline cursor-pointer"
-            >
-              Register
-            </span>
-          </div>
-        </motion.div>
-      );
-    } else if (view === "register") {
-      return (
-        <motion.div
-          key="register"
-          className="absolute inset-0 bg-gray-900 text-white p-6 rounded-2xl shadow-2xl border border-gray-700"
-          initial={variants.register.initial}
-          animate={variants.register.animate}
-          exit={variants.register.exit}
-          transition={{ duration: 0.8 }}
-        >
-          <h2 className="text-3xl font-bold text-center mb-6">Register</h2>
-          {error && (
-            <div className="text-center text-red-500 font-medium mb-4">
-              {error}
-            </div>
-          )}
-          {success && (
-            <div className="text-center text-green-500 font-medium mb-4">
-              {success}
-            </div>
-          )}
-
-          <form onSubmit={handleRegister} className="space-y-4">
-            <motion.input
-              type="text"
-              placeholder="Full Name"
-              className="w-full bg-gray-800 text-white rounded px-4 py-2 border border-gray-600"
-              value={registerForm.name}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, name: e.target.value })
-              }
-              required
-            />
-
-            <motion.input
-              type="email"
-              placeholder="Email"
-              className="w-full bg-gray-800 text-white rounded px-4 py-2 border border-gray-600"
-              value={registerForm.email}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, email: e.target.value })
-              }
-              required
-            />
-
-            <motion.input
-              type="password"
-              placeholder="Password"
-              className="w-full bg-gray-800 text-white rounded px-4 py-2 border border-gray-600"
-              value={registerForm.password}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, password: e.target.value })
-              }
-              required
-            />
-
-            <motion.input
-              type="password"
-              placeholder="Confirm Password"
-              className="w-full bg-gray-800 text-white rounded px-4 py-2 border border-gray-600"
-              value={registerForm.confirm}
-              onChange={(e) =>
-                setRegisterForm({ ...registerForm, confirm: e.target.value })
-              }
-              required
-            />
-
-            <motion.button
-              type="submit"
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-lg font-semibold"
-            >
-              Register
-            </motion.button>
-          </form>
-
-          <div className="mt-4 text-center">
-            <span
-              onClick={() => setView("login")}
-              className="text-sm text-indigo-400 hover:underline cursor-pointer"
-            >
-              Back to Login
-            </span>
-          </div>
-        </motion.div>
-      );
-    }
-  };
+  const inputStyles = "w-full px-4 py-3 bg-white/10 text-white rounded-xl border border-white/20 outline-none focus:border-blue-500 transition-all duration-200"
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-900">
-      <div className="relative w-80 h-96">
-        <AnimatePresence mode="wait">{renderContent()}</AnimatePresence>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-900 via-gray-900 to-purple-900 relative overflow-hidden">
+      <div className="absolute inset-0 w-full h-full bg-[radial-gradient(circle_at_50%_50%,rgba(17,24,39,0.9),rgba(17,24,39,1))]" />
+      
+      <div className="absolute inset-0">
+        <div className="absolute inset-0 bg-grid-white/10 bg-grid-16 [mask-image:radial-gradient(ellipse_at_center,transparent_20%,black)]" />
       </div>
+
+      <ToastContainer position="top-right" autoClose={3000} />
+
+      <div className={`relative z-10 w-full max-w-md px-4 ${showForgotModal || showOtpModal || showResetModal ? "blur-sm scale-[0.98]" : ""}`}>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key="login-card"
+            variants={cardVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.4, ease: "easeOut" }}
+            className="w-full backdrop-blur-xl bg-white/10 p-8 rounded-2xl border border-white/20 shadow-[0_0_40px_rgba(8,_112,_184,_0.7)]"
+          >
+            <div className="flex flex-col items-center mb-6">
+              <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mb-4">
+                <Car className="w-8 h-8 text-blue-400" />
+              </div>
+              <h2 className="text-3xl font-bold text-white mb-1">Master Admin Login</h2>
+              <p className="text-blue-200/80">Welcome back! Please enter your details</p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div>
+                <label htmlFor="email" className="block text-sm font-medium text-blue-200 mb-2">
+                  Email Address
+                </label>
+                <motion.input
+                  whileFocus={{ scale: 1.01 }}
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className={inputStyles}
+                  required
+                  placeholder="Enter your email"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-blue-200 mb-2">
+                  Password
+                </label>
+                <div className="relative">
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className={`${inputStyles} pr-10`}
+                    required
+                    placeholder="Enter your password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-blue-200 hover:text-white transition-colors"
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={toggleForgotPassword}
+                  className="text-sm text-blue-300 hover:text-blue-200 transition-colors"
+                >
+                  Forgot password?
+                </button>
+              </div>
+
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                className={`w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 ${
+                  loading ? "opacity-70 cursor-not-allowed" : ""
+                }`}
+                disabled={loading}
+              >
+                {loading ? (
+                  <span className="flex items-center justify-center">
+                    <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Logging in...
+                  </span>
+                ) : (
+                  "Sign in"
+                )}
+              </motion.button>
+            </form>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+
+      <AnimatePresence>
+        {showForgotModal &&
+          modalWrapper(
+            <motion.div
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-full max-w-md backdrop-blur-xl bg-white/10 p-8 rounded-2xl border border-white/20 shadow-[0_0_40px_rgba(8,_112,_184,_0.7)] mx-4"
+            >
+              <button
+                onClick={() => setShowForgotModal(false)}
+                className="absolute top-4 right-4 text-blue-200 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">Forgot Password</h2>
+              <form onSubmit={handleSendOTP} className="space-y-6">
+                <div>
+                  <label htmlFor="forgotEmail" className="block text-sm font-medium text-blue-200 mb-2">
+                    Email Address
+                  </label>
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    id="forgotEmail"
+                    type="email"
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    className={inputStyles}
+                    required
+                    placeholder="Enter your email"
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className={`w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 ${
+                    forgotLoading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                  disabled={forgotLoading}
+                >
+                  {forgotLoading ? "Sending OTP..." : "Send OTP"}
+                </motion.button>
+              </form>
+            </motion.div>,
+            "forgot-modal"
+          )}
+
+        {showOtpModal &&
+          modalWrapper(
+            <motion.div
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-full max-w-md backdrop-blur-xl bg-white/10 p-8 rounded-2xl border border-white/20 shadow-[0_0_40px_rgba(8,_112,_184,_0.7)] mx-4"
+            >
+              <button
+                onClick={() => setShowOtpModal(false)}
+                className="absolute top-4 right-4 text-blue-200 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-2xl font-bold text-white mb-2 text-center">Verify OTP</h2>
+              <p className="text-blue-200/80 text-sm mb-6 text-center">
+                Enter the 6-digit OTP sent to your email address
+              </p>
+              <p className={`text-sm text-center mb-6 ${isTimerRunning ? "text-green-400" : "text-red-400"}`}>
+                {isTimerRunning
+                  ? `OTP expires in ${Math.floor(timer / 60)}:${(timer % 60)
+                      .toString()
+                      .padStart(2, "0")}`
+                  : "OTP expired. Please request a new one."}
+              </p>
+              <form onSubmit={handleVerifyOTP} className="space-y-6">
+                <div>
+                  <label htmlFor="otp" className="block text-sm font-medium text-blue-200 mb-2">
+                    OTP Code
+                  </label>
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    type="text"
+                    id="otp"
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value)}
+                    className={inputStyles}
+                    required
+                    placeholder="Enter 6-digit OTP"
+                    maxLength={6}
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className={`w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 ${
+                    otpLoading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                  disabled={otpLoading}
+                >
+                  {otpLoading ? "Verifying..." : "Verify OTP"}
+                </motion.button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowOtpModal(false)
+                      setShowForgotModal(true)
+                    }}
+                    className="text-sm text-blue-300 hover:text-blue-200 transition-colors"
+                  >
+                    Didn't receive OTP? Try again
+                  </button>
+                </div>
+              </form>
+            </motion.div>,
+            "otp-modal"
+          )}
+
+        {showResetModal &&
+          modalWrapper(
+            <motion.div
+              variants={cardVariants}
+              initial="initial"
+              animate="animate"
+              exit="exit"
+              transition={{ duration: 0.4, ease: "easeOut" }}
+              className="w-full max-w-md backdrop-blur-xl bg-white/10 p-8 rounded-2xl border border-white/20 shadow-[0_0_40px_rgba(8,_112,_184,_0.7)] mx-4"
+            >
+              <button
+                onClick={() => setShowResetModal(false)}
+                className="absolute top-4 right-4 text-blue-200 hover:text-white transition-colors"
+              >
+                <X size={20} />
+              </button>
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">Reset Password</h2>
+              <form onSubmit={handleResetPassword} className="space-y-6">
+                <div>
+                  <label htmlFor="new-password" className="block text-sm font-medium text-blue-200 mb-2">
+                    New Password
+                  </label>
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    type="password"
+                    id="new-password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    className={inputStyles}
+                    required
+                    minLength={6}
+                    placeholder="Enter new password"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="confirm-password" className="block text-sm font-medium text-blue-200 mb-2">
+                    Confirm Password
+                  </label>
+                  <motion.input
+                    whileFocus={{ scale: 1.01 }}
+                    type="password"
+                    id="confirm-password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className={inputStyles}
+                    required
+                    minLength={6}
+                    placeholder="Confirm new password"
+                  />
+                </div>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className={`w-full py-3 px-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-medium shadow-lg shadow-blue-500/30 hover:shadow-blue-500/40 transition-all duration-200 ${
+                    resetLoading ? "opacity-70 cursor-not-allowed" : ""
+                  }`}
+                  disabled={resetLoading}
+                >
+                  {resetLoading ? "Resetting..." : "Reset Password"}
+                </motion.button>
+              </form>
+            </motion.div>,
+            "reset-modal"
+          )}
+      </AnimatePresence>
     </div>
-  );
+  )
 }
+
+export default AuthPage

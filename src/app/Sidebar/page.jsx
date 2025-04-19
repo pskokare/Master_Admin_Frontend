@@ -29,20 +29,40 @@ export default function Sidebar() {
       setIsLoginPage(window.location.pathname === "/");
 
       const checkAuth = () => {
-        const authState = localStorage.getItem("isLoggedIn") === "true";
-        setIsAuthenticated(authState);
+        // Check for both isLoggedIn flag and token as fallback
+        const hasLoginFlag = localStorage.getItem("isLoggedIn") === "true";
+        const hasToken = !!localStorage.getItem("token");
+        setIsAuthenticated(hasLoginFlag || hasToken);
       };
 
       checkAuth();
 
-      const handleStorageChange = () => {
-        checkAuth();
-      };
-
-      window.addEventListener("storage", handleStorageChange);
-      return () => window.removeEventListener("storage", handleStorageChange);
+      // Check auth state whenever this effect runs (on path change)
+      return () => {};
     }
   }, [pathname]);
+  
+  // Add another effect to re-check auth on focus and storage events
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const checkAuth = () => {
+        const hasLoginFlag = localStorage.getItem("isLoggedIn") === "true";
+        const hasToken = !!localStorage.getItem("token");
+        setIsAuthenticated(hasLoginFlag || hasToken);
+      };
+
+      // Storage events (for changes in other tabs)
+      window.addEventListener("storage", checkAuth);
+      
+      // Re-check when window gets focus
+      window.addEventListener("focus", checkAuth);
+      
+      return () => {
+        window.removeEventListener("storage", checkAuth);
+        window.removeEventListener("focus", checkAuth);
+      };
+    }
+  }, []);
 
   useEffect(() => {
     const handleMouseMove = (e) => {
@@ -83,8 +103,11 @@ export default function Sidebar() {
   ];
 
   const handleLogout = () => {
+    // Clear all authentication data
     localStorage.removeItem("isLoggedIn");
     localStorage.removeItem("authToken");
+    localStorage.removeItem("token");
+    localStorage.removeItem("id");
     setIsAuthenticated(false);
     router.push("/");
   };
