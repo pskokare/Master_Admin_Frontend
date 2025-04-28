@@ -268,8 +268,8 @@ const AnalyticsDashboard = () => {
                 onChange={(e) => setTimePeriod(e.target.value)}
               >
                 <option value="month">Monthly</option>
-                <option value="week">Weekly</option>
-                <option value="day">Daily</option>
+                {/* <option value="week">Weekly</option>
+                <option value="day">Daily</option> */}
               </select>
               <ChevronDown className="h-4 w-4 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
             </div>
@@ -325,12 +325,12 @@ const AnalyticsDashboard = () => {
             <CardHeader>
               <CardTitle className="text-base">Ride Volume Trends</CardTitle>
               <div className="flex space-x-2 mt-2">
-                <button className="px-3 py-1 text-xs rounded border border-gray-700 bg-gray-800 text-white">
+                {/* <button className="px-3 py-1 text-xs rounded border border-gray-700 bg-gray-800 text-white">
                   Daily
                 </button>
                 <button className="px-3 py-1 text-xs rounded border border-gray-700 bg-blue-600 text-white">
                   Weekly
-                </button>
+                </button> */}
                 <button className="px-3 py-1 text-xs rounded border border-gray-700 bg-gray-800 text-white">
                   Monthly
                 </button>
