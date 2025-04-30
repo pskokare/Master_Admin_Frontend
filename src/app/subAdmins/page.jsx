@@ -148,7 +148,7 @@ const SubAdminManagementPage = () => {
   // Block/Unblock
   const toggleBlockStatus = async (id) => {
     try {
-      const res = await axios.put(`https://api.expengo.com/api/admin/toggle-block/${id}`)
+      const res = await axios.put(`http://localhost:5000/api/admin/toggle-block/${id}`)
       if (res.status === 200) {
         toast.success(`Sub-admin ${res.data.status}`)
         fetchSubAdmins()
@@ -262,8 +262,8 @@ const SubAdminManagementPage = () => {
       // Set the correct endpoint based on mode
       const endpoint =
         formMode === "add"
-          ? "https://api.expengo.com/api/admin/addNewSubAdmin"
-          : `https://api.expengo.com/api/admin/updateSubAdmin/${formData._id}`
+          ? "http://localhost:5000/api/admin/addNewSubAdmin"
+          : `http://localhost:5000/api/admin/updateSubAdmin/${formData._id}`
 
       const method = formMode === "add" ? "post" : "put"
 
@@ -339,7 +339,7 @@ const SubAdminManagementPage = () => {
     const confirmDelete = window.confirm(`Are you sure you want to delete ${subAdmin.name}?`)
     if (confirmDelete) {
       try {
-        const response = await axios.delete(`https://api.expengo.com/api/admin/deleteSubAdmin/${subAdmin._id}`)
+        const response = await axios.delete(`http://localhost:5000/api/admin/deleteSubAdmin/${subAdmin._id}`)
         if (response.status === 200) {
           toast.success("Sub-admin deleted successfully!")
           fetchSubAdmins() // Refresh the data
@@ -730,7 +730,7 @@ const SubAdminManagementPage = () => {
                 {/* Form Fields */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium mb-1">Name*</label>
+                    <label className="block text-sm font-medium mb-1">Company Name*</label>
                     <input
                       type="text"
                       name="name"
@@ -756,7 +756,7 @@ const SubAdminManagementPage = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium mb-1">Company Info</label>
+                    <label className="block text-sm font-medium mb-1">Company Address</label>
                     <input
                       type="text"
                       name="companyInfo"
@@ -792,8 +792,6 @@ const SubAdminManagementPage = () => {
                     >
                       <option value="">Select role</option>
                       <option value="Admin">Admin</option>
-                      <option value="Editor">Editor</option>
-                      <option value="Viewer">Viewer</option>
                     </select>
                   </div>
 

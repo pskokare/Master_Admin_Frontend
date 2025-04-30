@@ -2,31 +2,34 @@
 import axios from "axios"
 import { useState, useEffect } from "react"
 import { BarChart, Bar, PieChart, Pie, Cell, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts"
-import { ArrowDown, ArrowUp, Calendar, Car, ChevronDown, Download, DollarSign, Star, Zap } from "lucide-react"
+import { Car, ChevronDown, Download } from "lucide-react"
 import { saveAs } from "file-saver"
 import * as XLSX from "xlsx"
 
 const AnalyticsDashboard = () => {
-  const [activeTab, setActiveTab] = useState("revenue")
+  const [activeTab, setActiveTab] = useState("expenses")
   const [analyticsData, setAnalyticsData] = useState([])
   const [revenueData, setRevenueData] = useState(null)
   const [expenseData, setExpenseData] = useState([])
+  const [companyExpenses, setCompanyExpenses] = useState([])
   const [totalExpense, setTotalExpense] = useState(0)
   const [expenseLoading, setExpenseLoading] = useState(true)
   const [timePeriod, setTimePeriod] = useState("month") // Default to month
   const [isBrowser, setIsBrowser] = useState(false)
+  const [totalCabs, setTotalCabs] = useState(0)
+  const [totalDrivers, setTotalDrivers] = useState(0)
 
   // Check if we're in the browser
   useEffect(() => {
     setIsBrowser(true)
   }, [])
 
-  // Fetch data using Axios
+  // Fetch revenue data
   useEffect(() => {
     const fetchRevenueData = async () => {
       try {
-        const response = await axios.get("https://api.expengo.com/api/revenue")
-        console.log("Revenue Data:", response.data) // Debugging
+        const response = await axios.get("http://localhost:5000/api/revenue")
+        console.log("Revenue Data:", response.data)
         setRevenueData(response.data)
       } catch (error) {
         console.error("Error fetching revenue data:", error)
@@ -43,53 +46,38 @@ const AnalyticsDashboard = () => {
     }
   }, [isBrowser])
 
-  // Fetch expense data from the API
+  // Fetch expense data and aggregate by company
   useEffect(() => {
     const fetchExpenseData = async () => {
       try {
-        const response = await axios.get("https://api.expengo.com/api/admin/getExpense")
+        setExpenseLoading(true)
+        const response = await axios.get("http://localhost:5000/api/admin/subadmin-expenses")
+
+        console.log("Expense API Response:", response.data)
 
         if (response.data.success && Array.isArray(response.data.data)) {
-          const expenses = response.data.data
-          setExpenseData(expenses)
+          // Store the raw expense data
+          setExpenseData(response.data.data)
 
-          // Calculate total expense across all cabs
-          const total = expenses.reduce((sum, expense) => sum + expense.totalExpense, 0)
+          // Calculate total expense
+          const total = response.data.data.reduce((sum, expense) => sum + expense.totalExpense, 0)
           setTotalExpense(total)
+
+          // Aggregate expenses by company name
+          setCompanyExpenses(response.data.data.map(item => ({
+            company: item.SubAdmin,
+            amount: item.totalExpense,
+            totalDrivers: item.totalDrivers,
+            totalCabs: item.totalCabs
+          })))
         } else {
           throw new Error("Invalid expense data format from API")
         }
       } catch (error) {
         console.error("Error fetching expense data:", error)
-        // Set mock data for testing if API fails
-        const mockData = [
-          {
-            cabNumber: "CAB001",
-            category: "Maintenance",
-            date: new Date().toISOString(),
-            totalExpense: 1500,
-            breakdown: {
-              fuel: 800,
-              fastTag: 200,
-              tyrePuncture: 300,
-              otherProblems: 200,
-            },
-          },
-          {
-            cabNumber: "CAB002",
-            category: "Fuel",
-            date: new Date().toISOString(),
-            totalExpense: 1200,
-            breakdown: {
-              fuel: 1000,
-              fastTag: 100,
-              tyrePuncture: 0,
-              otherProblems: 100,
-            },
-          },
-        ]
-        setExpenseData(mockData)
-        setTotalExpense(mockData.reduce((sum, expense) => sum + expense.totalExpense, 0))
+        setExpenseData([])
+        setCompanyExpenses([])
+        setTotalExpense(0)
       } finally {
         setExpenseLoading(false)
       }
@@ -100,82 +88,38 @@ const AnalyticsDashboard = () => {
     }
   }, [isBrowser])
 
+  // Export data to Excel
   const exportToExcel = () => {
     if (!isBrowser) return
 
-    if (expenseData.length === 0) {
+    if (companyExpenses.length === 0) {
       alert("No data to export!")
       return
     }
 
     try {
-      // Get current date for filtering
-      const currentDate = new Date()
-
-      // Filter data based on selected time period
-      let filteredExpenseData = [...expenseData]
-
-      if (timePeriod === "week") {
-        // Get date from 7 days ago
-        const weekAgo = new Date()
-        weekAgo.setDate(currentDate.getDate() - 7)
-
-        filteredExpenseData = expenseData.filter((expense) => {
-          if (!expense.date) return false
-          const expenseDate = new Date(expense.date)
-          return expenseDate >= weekAgo && expenseDate <= currentDate
-        })
-      } else if (timePeriod === "day") {
-        // Filter for today only
-        filteredExpenseData = expenseData.filter((expense) => {
-          if (!expense.date) return false
-          const expenseDate = new Date(expense.date)
-          return expenseDate.toDateString() === currentDate.toDateString()
-        })
-      }
-
-      // If no data after filtering, use mock data for demonstration
-      if (filteredExpenseData.length === 0) {
-        console.log("No data for selected period, using sample data for demonstration")
-
-        // Create sample data based on time period
-        const sampleData = [
-          {
-            cabNumber: "CAB001",
-            category: "Maintenance",
-            date: new Date().toISOString(),
-            totalExpense: 1500,
-            breakdown: {
-              fuel: 800,
-              fastTag: 200,
-              tyrePuncture: 300,
-              otherProblems: 200,
-            },
-          },
-        ]
-
-        filteredExpenseData = sampleData
-      }
-
-      // Format Data to match the table
-      const formattedData = filteredExpenseData.map((expense, index) => ({
+      // Format Data for company expenses
+      const formattedData = companyExpenses.map((expense, index) => ({
         ID: index + 1,
-        "Cab Number": expense.cabNumber || "N/A",
-        Category: expense.category || "N/A",
-        Date: expense.date ? new Date(expense.date).toLocaleDateString() : "N/A",
-        "Fuel (₹)": expense.breakdown?.fuel || 0,
-        "FastTag (₹)": expense.breakdown?.fastTag || 0,
-        "Tyre Repair (₹)": expense.breakdown?.tyrePuncture || 0,
-        "Other Expenses (₹)": expense.breakdown?.otherProblems || 0,
-        "Total Expense (₹)": expense.totalExpense,
+        "Company Name": expense.company,
+        "Total Cabs": expense.totalCabs,
+        "Total Drivers": expense.totalDrivers,
+        "Total Expense (₹)": expense.amount
       }))
+
+      // Add a row for totals
+      formattedData.push({
+        ID: "",
+        "Company Name": "Totals",
+        "Total Expense (₹)": totalExpense,
+      })
 
       // Convert JSON to Worksheet
       const worksheet = XLSX.utils.json_to_sheet(formattedData)
 
       // Create Workbook and add Worksheet
       const workbook = XLSX.utils.book_new()
-      XLSX.utils.book_append_sheet(workbook, worksheet, `Cab Expenses (${timePeriod})`)
+      XLSX.utils.book_append_sheet(workbook, worksheet, `Company Expenses (${timePeriod})`)
 
       // Convert to Blob & Trigger Download
       const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" })
@@ -183,7 +127,7 @@ const AnalyticsDashboard = () => {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       })
 
-      saveAs(data, `CabExpensesReport_${timePeriod}.xlsx`)
+      saveAs(data, `CompanyExpensesReport_${timePeriod}.xlsx`)
 
       alert("Export successful!")
     } catch (error) {
@@ -192,13 +136,36 @@ const AnalyticsDashboard = () => {
     }
   }
 
-  // Pie chart data
-  const pieData = [
-    { name: "1st Qtr", value: 45 },
-    { name: "2nd Qtr", value: 30 },
-    { name: "3rd Qtr", value: 15 },
-    { name: "4th Qtr", value: 10 },
-  ]
+  // Generate pie chart data from company expenses
+  const generatePieChartData = () => {
+    if (companyExpenses.length === 0) {
+      return [
+        { name: "1st Qtr", value: 45 },
+        { name: "2nd Qtr", value: 30 },
+        { name: "3rd Qtr", value: 15 },
+        { name: "4th Qtr", value: 10 },
+      ]
+    }
+
+    // Take top 4 companies, combine the rest as "Others"
+    const topCompanies = companyExpenses.slice(0, 4)
+    const otherCompanies = companyExpenses.slice(4)
+
+    const pieData = topCompanies.map(item => ({
+      name: item.company,
+      value: item.amount
+    }))
+
+    if (otherCompanies.length > 0) {
+      const otherTotal = otherCompanies.reduce((sum, item) => sum + item.amount, 0)
+      pieData.push({
+        name: "Others",
+        value: otherTotal
+      })
+    }
+
+    return pieData
+  }
 
   // Bar chart data
   const barData = [
@@ -209,7 +176,7 @@ const AnalyticsDashboard = () => {
   ]
 
   // Colors for pie chart
-  const COLORS = ["#4169E1", "#FF7F50", "#A9A9A9", "#FFD700"]
+  const COLORS = ["#4169E1", "#FF7F50", "#A9A9A9", "#FFD700", "#8A2BE2", "#20B2AA"]
 
   // Custom Card component
   const Card = ({ children, className = "" }) => (
@@ -268,8 +235,6 @@ const AnalyticsDashboard = () => {
                 onChange={(e) => setTimePeriod(e.target.value)}
               >
                 <option value="month">Monthly</option>
-                {/* <option value="week">Weekly</option>
-                <option value="day">Daily</option> */}
               </select>
               <ChevronDown className="h-4 w-4 absolute right-2 top-1/2 transform -translate-y-1/2 pointer-events-none" />
             </div>
@@ -288,9 +253,8 @@ const AnalyticsDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="flex items-baseline">
-                <span className="text-3xl font-bold">{totalExpense}</span>
+                <span className="text-3xl font-bold">₹{totalExpense}</span>
               </div>
-             
               <div className="mt-1">
                 <Car className="h-5 w-5 text-blue-500" />
               </div>
@@ -302,35 +266,23 @@ const AnalyticsDashboard = () => {
               <CardTitle className="text-sm text-gray-400">Revenue</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="p-4 bg-gray-900 border border-gray-800 rounded-lg">
-                {totalExpense ? (
-                  <p className="text-lg font-medium text-green-500">Total Revenue: {totalExpense}</p>
-                ) : (
-                  <p className="text-gray-400">Loading revenue data...</p>
-                )}
+              <div className="flex items-baseline">
+                <span className="text-3xl font-bold text-green-500">₹{totalExpense}</span>
               </div>
-
-             
             </CardContent>
           </Card>
         </div>
 
         {/* Sales Title */}
-        <h2 className="text-xl font-semibold mb-6 animate-fadeIn">Sales</h2>
+        <h2 className="text-xl font-semibold mb-6 animate-fadeIn">Expense Distribution</h2>
 
         {/* Charts Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 animate-fadeIn">
           {/* Pie Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Ride Volume Trends</CardTitle>
+              <CardTitle className="text-base">Company Expense Distribution</CardTitle>
               <div className="flex space-x-2 mt-2">
-                {/* <button className="px-3 py-1 text-xs rounded border border-gray-700 bg-gray-800 text-white">
-                  Daily
-                </button>
-                <button className="px-3 py-1 text-xs rounded border border-gray-700 bg-blue-600 text-white">
-                  Weekly
-                </button> */}
                 <button className="px-3 py-1 text-xs rounded border border-gray-700 bg-gray-800 text-white">
                   Monthly
                 </button>
@@ -341,7 +293,7 @@ const AnalyticsDashboard = () => {
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
-                      data={pieData}
+                      data={generatePieChartData()}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -353,11 +305,13 @@ const AnalyticsDashboard = () => {
                       animationDuration={1500}
                       label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
                     >
-                      {pieData.map((entry, index) => (
+                      {generatePieChartData().map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip
+                      formatter={(value) => [`₹${value}`, 'Amount']}
+                    />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
@@ -368,7 +322,7 @@ const AnalyticsDashboard = () => {
           {/* Bar Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Chart Title</CardTitle>
+              <CardTitle className="text-base">Expense Trends</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-[300px]">
@@ -414,63 +368,41 @@ const AnalyticsDashboard = () => {
           </Card>
         </div>
 
-        {/* Tabs Section */}
+        {/* Expenses Tab Section */}
         <div className="mb-4 animate-fadeIn">
           <div>
-            <div className="flex justify-between items-center mb-4 animate-fadeIn">
-              <div className="inline-flex h-10 items-center justify-center rounded-md bg-gray-900 p-1 animate-fadeIn">
-              
-                <button
-                  className={`inline-flex items-center justify-center whitespace-nowrap rounded-sm px-3 py-1.5 text-sm font-medium ${
-                    activeTab === "expenses" ? "bg-gray-800" : ""
-                  } animate-fadeIn`}
-                  onClick={() => setActiveTab("expenses")}
-                >
-                  Expenses
-                </button>
-              </div>
-            </div>
 
-            {activeTab === "expenses" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Expenses Analysis</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {expenseData.length > 0 ? (
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <p className="text-lg font-medium text-red-500">Total Expenses: {totalExpense}</p>
-                      </div>
-                      <ul className="divide-y divide-gray-700">
-                        {expenseData.map((expense, index) => (
-                          <li key={index} className="py-3 flex justify-between items-center">
-                            <div>
-                              <p className="text-gray-300 font-medium">Cab: {expense.cabNumber}</p>
-                              <p className="text-gray-400 text-sm">{expense.category}</p>
-                            </div>
-                            <p className="text-red-400 font-semibold">{expense.totalExpense}</p>
-                          </li>
-                        ))}
-                      </ul>
+            <Card>
+              <CardHeader>
+                <CardTitle>Expenses Analysis</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {expenseLoading ? (
+                  <p className="text-gray-400">Loading expense data...</p>
+                ) : companyExpenses.length > 0 ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <p className="text-lg font-medium text-red-500">Total Expenses: ₹{totalExpense}</p>
                     </div>
-                  ) : (
-                    <p className="text-gray-400">Loading expense data...</p>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {activeTab === "customer" && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Customer Analytics</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <p className="text-gray-400">Customer analytics data will be displayed here.</p>
-                </CardContent>
-              </Card>
-            )}
+                    <ul className="divide-y divide-gray-700">
+                      {companyExpenses.map((item, index) => (
+                        <li key={index} className="py-3 flex justify-between items-center">
+                          <div>
+                            <p className="text-gray-300 font-medium">
+                              {item.company}
+                            </p>
+                            {/* <p className="text-gray-400 text-sm">Cabs: {item.totalCabs} | Drivers: {item.totalDrivers}</p> */}
+                          </div>
+                          <p className="text-red-400 font-semibold">₹{item.amount}</p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-gray-400">No expense data available</p>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
@@ -479,12 +411,3 @@ const AnalyticsDashboard = () => {
 }
 
 export default AnalyticsDashboard
-
-
-
-
-
-
-
-
-
