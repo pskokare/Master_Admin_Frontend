@@ -181,18 +181,20 @@ const SubAdminManagementPage = () => {
   }
 
   const handleEdit = (subAdmin) => {
-    setFormMode("edit")
-    setFormData({
-      ...subAdmin,
-    })
-    setProfileImageFile(null)
-    setProfileImagePreview(subAdmin.profileImage || "")
-    setCompanyLogoFile(null)
-    setCompanyLogoPreview(subAdmin.companyLogo || "")
-    setSignature(null)
-    setSignaturePreview(subAdmin.signature || "")
-    setIsAddEditModalOpen(true)
-  }
+  console.log("Editing subAdmin:", subAdmin); // Check what data we're starting with
+  setFormMode("edit");
+  setFormData({
+    _id: subAdmin._id,
+    name: subAdmin.name || "",
+    email: subAdmin.email || "",
+    role: subAdmin.role || "",
+    status: subAdmin.status || "Active",
+    phone: subAdmin.phone || "",
+    companyInfo: subAdmin.companyInfo || "",
+    companyPrefix: subAdmin.companyPrefix || ""
+  });
+  setIsAddEditModalOpen(true);
+};
 
   const handleAvatarChange = (e) => {
     if (e.target.files && e.target.files[0]) {
@@ -222,83 +224,82 @@ const SubAdminManagementPage = () => {
   }
 
   const handleFormChange = (e) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = e.target;
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: value 
+    }));
+  };
 
   const handleFormSubmit = async () => {
     // Validate required fields
-    if (!formData.name?.trim() || !formData.email?.trim() || !formData.role?.trim() || !formData.phone?.trim()) {
-      toast.error("Name, Email, Role, and Phone fields are required")
-      return
+    const emailRegex = /@gmail\.com$/i;
+    if (!emailRegex.test(formData.email)) {
+      toast.error("Invalid Email");
+      return;
+    }
+
+    const phoneRegex = /^\d{10}$/;
+    if (!phoneRegex.test(formData.phone)) {
+      toast.error("Enter Valid Phone Number");
+      return;
+    }
+
+    if (!formData.name || !formData.role) {
+      toast.error("Please fill all required fields");
+      return;
     }
 
     try {
-      const formDataToSend = new FormData()
+      // Create the payload object
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        role: formData.role,
+        status: formData.status,
+        phone: formData.phone,
+        companyInfo: formData.companyInfo,
+        companyPrefix: formData.companyPrefix
+      };
 
-      // Append text fields
-      Object.keys(formData).forEach((key) => {
-        // Skip _id for new records and don't send undefined values
-        if (key !== "_id" || formMode === "edit") {
-          if (formData[key] !== undefined && formData[key] !== null) {
-            formDataToSend.append(key, formData[key])
-          }
-        }
-      })
+      console.log("Payload being sent:", payload); // Debug log
 
-      // Append files only if they exist
-      if (profileImageFile) {
-        formDataToSend.append("profileImage", profileImageFile)
-      }
-
-      if (companyLogoFile) {
-        formDataToSend.append("companyLogo", companyLogoFile)
-      }
-
-      if (signature) {
-        formDataToSend.append("signature", signature)
-      }
-
-      // Set the correct endpoint based on mode
-      const endpoint =
-        formMode === "add"
-          ? "http://localhost:5000/api/admin/addNewSubAdmin"
-          : `http://localhost:5000/api/admin/updateSubAdmin/${formData._id}`
-
-      const method = formMode === "add" ? "post" : "put"
+      const endpoint = formMode === "add"
+        ? "https://api.expengo.com/api/admin/addNewSubAdmin"
+        : `http://localhost:5000/api/admin/updateSubAdmin/${formData._id}`;
 
       const response = await axios({
-        method,
+        method: formMode === "add" ? "post" : "put",
         url: endpoint,
-        data: formDataToSend,
+        data: payload,
         headers: {
-          "Content-Type": "multipart/form-data",
+          "Content-Type": "application/json",
         },
-      })
+      });
+
+      console.log("API Response:", response.data); // Debug log
 
       if (response.status === (formMode === "add" ? 201 : 200)) {
-        toast.success(`Sub-admin ${formMode === "add" ? "created" : "updated"} successfully!`)
-        fetchSubAdmins()
-        setIsAddEditModalOpen(false)
+        toast.success(`Sub-admin ${formMode === "add" ? "created" : "updated"} successfully!`);
+        fetchSubAdmins(); // Refresh the data
+        setIsAddEditModalOpen(false);
       }
     } catch (error) {
-      console.error("Error:", error)
-      let errorMessage = "An error occurred"
+      console.error("Error:", error);
+      let errorMessage = "An error occurred";
 
       if (error.response) {
-        // Server responded with a status other than 2xx
-        errorMessage =
-          error.response.data.message ||
-          error.response.data.error ||
-          `Failed to ${formMode === "add" ? "create" : "update"} sub-admin`
+        console.error("Response data:", error.response.data);
+        errorMessage = error.response.data.message || `Failed to ${formMode} sub-admin`;
       } else if (error.request) {
-        // Request was made but no response received
-        errorMessage = "No response from server"
+        console.error("No response received:", error.request);
+        errorMessage = "No response from server";
       }
 
-      toast.error(errorMessage)
+      toast.error(errorMessage);
     }
-  }
+  };
+
   // Reset form
   const handleFormReset = () => {
     if (formMode === "add") {
@@ -361,13 +362,12 @@ const SubAdminManagementPage = () => {
   }
 
   return (
-    <div className="bg-gray-900 md:ml-60 text-white min-h-screen p-2 sm:p-4 h-[102%]">
-      {/* <div className="min-h-screen md:ml-60 h-full bg-gray-900 text-white p-6 relative overflow-hidden"> */}
+    <div className="bg-gray-900 md:ml-60 text-white min-h-screen p-2 sm:p-4 h-[102%] bg-fixed bg-no-repeat overflow-x-hidden">
       <ToastContainer position="top-right" theme="dark" />
 
       {/* Title & Add Button - Stacked on mobile */}
       <motion.div
-        className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 mt-4 sm:mt-8 gap-2 sm:gap-0"
+        className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 sm:mb-6 mt-2 sm:mt-4 gap-2 sm:gap-0"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
@@ -461,9 +461,8 @@ const SubAdminManagementPage = () => {
                     </div>
                   </div>
                   <span
-                    className={`text-xs px-2 py-1 rounded-full ${
-                      subAdmin.status === "Active" ? "bg-green-700" : "bg-red-700"
-                    }`}
+                    className={`text-xs px-2 py-1 rounded-full ${subAdmin.status === "Active" ? "bg-green-700" : "bg-red-700"
+                      }`}
                   >
                     {subAdmin.status}
                   </span>
@@ -503,9 +502,8 @@ const SubAdminManagementPage = () => {
                   </div>
                   <button
                     onClick={() => toggleBlockStatus(subAdmin._id)}
-                    className={`px-2 py-1 text-xs rounded-md ${
-                      subAdmin.status === "Active" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
-                    }`}
+                    className={`px-2 py-1 text-xs rounded-md ${subAdmin.status === "Active" ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+                      }`}
                   >
                     {subAdmin.status === "Active" ? "Block" : "Unblock"}
                   </button>
@@ -518,8 +516,8 @@ const SubAdminManagementPage = () => {
           </div>
 
           {/* Desktop Table View */}
-          <div className="hidden sm:block overflow-x-auto rounded-md shadow-sm">
-            <table className="w-full text-left border-collapse bg-gray-800">
+          <div className="hidden sm:block">
+            <table className="w-full text-left border-collapse bg-gray-800 overflow-x-auto">
               <thead className="bg-gray-700 border-b border-gray-600">
                 <tr>
                   <th className="p-2 sm:p-3 text-sm">Name</th>
@@ -546,9 +544,8 @@ const SubAdminManagementPage = () => {
                     <td className="p-2 sm:p-3 text-sm">{subAdmin.role}</td>
                     <td className="p-2 sm:p-3">
                       <span
-                        className={`inline-block px-2 py-1 text-xs rounded-full ${
-                          subAdmin.status === "Active" ? "bg-green-700" : "bg-red-700"
-                        }`}
+                        className={`inline-block px-2 py-1 text-xs rounded-full ${subAdmin.status === "Active" ? "bg-green-700" : "bg-red-700"
+                          }`}
                       >
                         {subAdmin.status}
                       </span>
@@ -569,11 +566,10 @@ const SubAdminManagementPage = () => {
                     <td className="p-2 sm:p-3">
                       <button
                         onClick={() => toggleBlockStatus(subAdmin._id)}
-                        className={`px-2 py-1 text-xs rounded-md ${
-                          subAdmin.status === "Active"
+                        className={`px-2 py-1 text-xs rounded-md ${subAdmin.status === "Active"
                             ? "bg-red-600 hover:bg-red-700"
                             : "bg-green-600 hover:bg-green-700"
-                        }`}
+                          }`}
                       >
                         {subAdmin.status === "Active" ? "Block" : "Unblock"}
                       </button>
@@ -604,7 +600,7 @@ const SubAdminManagementPage = () => {
 
       {/* Pagination */}
       {!isLoading && !error && totalItems > 0 && (
-        <div className="flex flex-col sm:flex-row items-center justify-between mt-3 sm:mt-4 gap-2 sm:gap-0">
+        <div className="flex flex-col sm:flex-row items-center justify-between mt-3 sm:mt-4 gap-2 sm:gap-0 max-w-full">
           <p className="text-xs sm:text-sm text-gray-300">
             Showing <span className="font-medium">{filteredSubAdmins.length > 0 ? startIndex + 1 : 0}</span> to{" "}
             <span className="font-medium">{Math.min(endIndex, filteredSubAdmins.length)}</span> of{" "}
@@ -671,9 +667,8 @@ const SubAdminManagementPage = () => {
                 <div className="flex justify-between py-2 border-b border-gray-700">
                   <span className="text-gray-400">Status</span>
                   <span
-                    className={`px-2 py-1 text-xs rounded-full ${
-                      viewSubAdmin.status === "Active" ? "bg-green-700" : "bg-red-700"
-                    }`}
+                    className={`px-2 py-1 text-xs rounded-full ${viewSubAdmin.status === "Active" ? "bg-green-700" : "bg-red-700"
+                      }`}
                   >
                     {viewSubAdmin.status}
                   </span>
@@ -733,7 +728,7 @@ const SubAdminManagementPage = () => {
                     <label className="block text-sm font-medium mb-1">Company Name*</label>
                     <input
                       type="text"
-                      name="name"
+                      name="name"  // Must match formData key
                       value={formData.name || ""}
                       onChange={handleFormChange}
                       className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-sm"
@@ -753,6 +748,9 @@ const SubAdminManagementPage = () => {
                       placeholder="Email address"
                       required
                     />
+                    {formData.email && !/@gmail\.com$/i.test(formData.email) && (
+                      <p className="text-red-500 text-xs mt-1">Enter Valid Email </p>
+                    )}
                   </div>
 
                   <div>
@@ -779,6 +777,9 @@ const SubAdminManagementPage = () => {
                       placeholder="Phone number"
                       required
                     />
+                    {formData.phone && !/^\d{10}$/.test(formData.phone) && (
+                      <p className="text-red-500 text-xs mt-1">Phone number must be exactly 10 digits</p>
+                    )}
                   </div>
 
                   <div>
