@@ -148,7 +148,7 @@ const SubAdminManagementPage = () => {
   // Block/Unblock
   const toggleBlockStatus = async (id) => {
     try {
-      const res = await axios.put(`https://master-admin-frontend.vercel.app/api/admin/toggle-block/${id}`)
+      const res = await axios.put(`https://api.expengo.com/api/admin/toggle-block/${id}`)
       if (res.status === 200) {
         toast.success(`Sub-admin ${res.data.status}`)
         fetchSubAdmins()
@@ -266,7 +266,7 @@ const SubAdminManagementPage = () => {
 
       const endpoint = formMode === "add"
         ? "https://api.expengo.com/api/admin/addNewSubAdmin"
-        : `https://master-admin-frontend.vercel.app/api/admin/updateSubAdmin/${formData._id}`;
+        : `https://api.expengo.com/api/admin/updateSubAdmin/${formData._id}`;
 
       const response = await axios({
         method: formMode === "add" ? "post" : "put",
@@ -340,7 +340,7 @@ const SubAdminManagementPage = () => {
     const confirmDelete = window.confirm(`Are you sure you want to delete ${subAdmin.name}?`)
     if (confirmDelete) {
       try {
-        const response = await axios.delete(`https://master-admin-frontend.vercel.app/api/admin/deleteSubAdmin/${subAdmin._id}`)
+        const response = await axios.delete(`https://api.expengo.com/api/admin/deleteSubAdmin/${subAdmin._id}`)
         if (response.status === 200) {
           toast.success("Sub-admin deleted successfully!")
           fetchSubAdmins() // Refresh the data

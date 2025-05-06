@@ -26,7 +26,7 @@ export default function MasterAdminDashboardBlackTheme() {
     const fetchSubAdmin = async () => {
       try {
         const response = await axios.get(
-          "https://master-admin-frontend.vercel.app/api/admin/sub-admin-count"
+          "https://api.expengo.com/api/admin/sub-admin-count"
         );
         console.log("API Response:", response.data); // Debugging log
 
@@ -55,7 +55,7 @@ export default function MasterAdminDashboardBlackTheme() {
     const fetchDrivers = async () => {
       try {
         const response = await axios.get(
-          "https://master-admin-frontend.vercel.app/api/admin/driver-count"
+          "https://api.expengo.com/api/admin/driver-count"
         ); // Ensure correct backend URL
         console.log("API Response:", response.data); // Debugging log
         console.log("hello");
@@ -83,7 +83,7 @@ export default function MasterAdminDashboardBlackTheme() {
     const fetchCabs = async () => {
       try {
         const response = await axios.get(
-          "https://master-admin-frontend.vercel.app/api/admin/cab-count"
+          "https://api.expengo.com/api/admin/cab-count"
         ); // Ensure correct backend URL
         console.log("API Response:", response.data); // Debugging log
         if (response.data && typeof response.data.count === "number") {
@@ -110,7 +110,7 @@ export default function MasterAdminDashboardBlackTheme() {
       try {
         setExpenseLoading(true);
         const response = await axios.get(
-          "https://master-admin-frontend.vercel.app/api/admin/getExpense"
+          "https://api.expengo.com/api/admin/getExpense"
         );
 
         if (response.data.success && Array.isArray(response.data.data)) {
@@ -150,7 +150,7 @@ export default function MasterAdminDashboardBlackTheme() {
       setActivityLoading(true);
 
       // Fetch recent expense activities from the API
-      const response = await axios.get("https://master-admin-frontend.vercel.app/api/expenses");
+      const response = await axios.get("https://api.expengo.com/api/expenses");
 
       if (response.data && Array.isArray(response.data)) {
         // Format the activities data

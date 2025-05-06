@@ -79,9 +79,9 @@ export default function ExpenseDashboard() {
   // };
 
   // API base URL - you can change this to match your environment
-  const API_BASE_URL = "https://master-admin-frontend.vercel.app/api/admin/getExpense"
-  const API_BASE_URL1 = "https://master-admin-frontend.vercel.app/api/admin/getAllSubAdmins"
-  const API_BASE_URL2 = `https://master-admin-frontend.vercel.app/api/master/get-cab-details`
+  const API_BASE_URL = "https://api.expengo.com/api/admin/getExpense"
+  const API_BASE_URL1 = "https://api.expengo.com/api/admin/getAllSubAdmins"
+  const API_BASE_URL2 = `https://api.expengo.com/api/master/get-cab-details`
 
 
   const handleViewCabDetails = async (id) => {

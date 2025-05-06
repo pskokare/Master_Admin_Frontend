@@ -128,7 +128,7 @@ export default function SystemSettingsPage() {
     const updatePermissions = async () => {
       try {
         const response = await axios.post(
-          "https://master-admin-frontend.vercel.app/api/subAdminPermissions/sub-admin",
+          "https://api.expengo.com/api/subAdminPermissions/sub-admin",
           {
             subAdminId: subDetail._id,
             name: subDetail.name,
